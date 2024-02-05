@@ -6,17 +6,15 @@ import (
 )
 
 const (
-	defaultPort   = "8080"
-	defaultSecret = "secret"
-	defaultDbUrl  = "mongodb://localhost:27017"
-	defaultDbName = "speed_check_db"
+	defaultPort  = "8080"
+	defaultDbUrl = "postgresql://localhost:5432"
 )
 
 // Config contain all the config that this application needs
 type Config struct {
-	Port      string `json:"port"`
-	DBName    string `json:"db_name"`
-	DBURL     string `json:"dburl"`
+	Port      string
+	GeoAPIKey string
+	DBURL     string
 }
 
 // LoadConfig loads Config from the environment and returns it
@@ -35,17 +33,17 @@ func LoadConfig(filename ...string) Config {
 	}
 	config.Port = port
 
-	dbUrl, ok := os.LookupEnv("DATABASE_URL")
+	dbUrl, ok := os.LookupEnv("DB_URL")
 	if !ok {
 		dbUrl = defaultDbUrl
 	}
 	config.DBURL = dbUrl
 
-	dbName, ok := os.LookupEnv("DATABASE_NAME")
+	geoAPIKey, ok := os.LookupEnv("GEO_API_KEY")
 	if !ok {
-		dbName = defaultDbName
+		geoAPIKey = ""
 	}
-	config.DBName = dbName
+	config.GeoAPIKey = geoAPIKey
 
 	return config
 }

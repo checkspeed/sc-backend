@@ -19,18 +19,20 @@ type apiResp struct {
 
 type NetworkData struct {
 	Isp string `json:"isp,omitempty"`
+	Longitude string `json:"longitude"`
+	Latitude string `json:"latitude"`
 }
 
 func main() {
 	cfg := LoadConfig()
 
 	// init db
-	store, client, err := NewMongoStore(cfg.DBURL, cfg.DBName)
+	store, err := NewStore(cfg.DBURL)
 	if err != nil {
 		log.Fatalf("unable to initialize database, %v \n", err.Error())
 	}
 
-	ctrl := NewController(store)
+	ctrl := NewController(cfg, store)
 	
 
 	// create channel to listen to shutdown signals
@@ -43,16 +45,16 @@ func main() {
 
 	<-shutdownChan
 	log.Println("Closing application")
-	client.Disconnect(context.Background())
+	store.CloseConn(context.Background())
 }
 
 func RunServer(ctrl *controller, cfg Config) {
 	r := gin.Default()
 	
 	r.GET("/", welcome)
-	r.GET("/network", getNetworkInfo)
+	r.GET("/network", ctrl.GetNetworkInfo)
 	r.POST("/speed_test_result", ctrl.CreateSpeedtestResults)
-	r.GET("/speed_test_result/list", ctrl.CreateSpeedtestResults)
+	r.GET("/speed_test_result/list", ctrl.GetSpeedtestResults)
 
 
 	r.Run(":"+cfg.Port)
