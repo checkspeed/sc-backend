@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"encoding/json"
 	"log"
@@ -9,22 +12,22 @@ import (
 )
 
 type controller struct {
+	cfg   Config
 	store Datastore
 }
 
-func NewController(store Datastore) *controller {
+func NewController(cfg Config, store Datastore) *controller {
 	return &controller{
-		store: store,
+		cfg,
+		store,
 	}
 }
 
-// get network info (isp) from 3rd party
-func getNetworkInfo(c *gin.Context) {
+func (ct *controller) GetNetworkInfo(c *gin.Context) {
 	ipAddr := c.Request.URL.Query().Get("ip")
 
-	log.Println("received request ip:  ", ipAddr)
-
-	resp, err := http.Get("http://ip-api.com/json/" + ipAddr)
+	geoUrl := fmt.Sprintf("https://api.ipgeolocation.io/ipgeo?apiKey=%s&ip=%s", ct.cfg.GeoAPIKey, ipAddr)
+	resp, err := http.Get(geoUrl)
 	if err != nil {
 		log.Println("error calling ip-api endpoint", err)
 		c.JSON(http.StatusBadRequest, apiResp{Error: err.Error()})
@@ -53,6 +56,7 @@ func (ct *controller) CreateSpeedtestResults(c *gin.Context) {
 
 	// TODO: create seperate request body struct
 	// handle request body validations
+	requestBody.ID = uuid.NewString()
 	if err := ct.store.CreateSpeedtestResults(c.Request.Context(), &requestBody); err != nil {
 		log.Println("failed to store speed test results: ", err.Error())
 		c.JSON(http.StatusInternalServerError, apiResp{Error: err.Error()})
@@ -74,7 +78,7 @@ func (ct *controller) GetSpeedtestResults(c *gin.Context) {
 
 	apiResp := apiResp{
 		Message: "success",
-		Data: results,
+		Data:    results,
 	}
 
 	c.JSON(http.StatusOK, apiResp)
