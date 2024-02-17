@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,6 +52,12 @@ func main() {
 func RunServer(ctrl *controller, cfg Config) {
 	r := gin.Default()
 	
+	// add cors config
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowCredentials = true
+	corsConfig.AddAllowMethods("OPTIONS")
+	r.Use(cors.New(corsConfig))
+
 	r.GET("/", welcome)
 	r.GET("/network", ctrl.GetNetworkInfo)
 	r.POST("/speed_test_result", ctrl.CreateSpeedtestResults)
