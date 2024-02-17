@@ -55,6 +55,7 @@ func RunServer(ctrl *controller, cfg Config) {
 	// add cors config
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowCredentials = true
+	corsConfig.AllowAllOrigins = true
 	corsConfig.AddAllowMethods("OPTIONS")
 	r.Use(cors.New(corsConfig))
 

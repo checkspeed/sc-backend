@@ -1,4 +1,4 @@
-module github.com/checkspeed/draft-server
+module github.com/checkspeed/sc-backend
 
 go 1.20
 
