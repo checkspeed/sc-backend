@@ -27,6 +27,8 @@ CREATE TABLE
         client_id VARCHAR(50) DEFAULT NULL,
         city VARCHAR(50) DEFAULT NULL,
         server_name VARCHAR(50) DEFAULT NULL,
+        server_location VARCHAR(50) DEFAULT NULL,
+        test_platform VARCHAR(50) DEFAULT NULL,
 
         longitude DECIMAL DEFAULT NULL,
         latitude DECIMAL DEFAULT NULL,
