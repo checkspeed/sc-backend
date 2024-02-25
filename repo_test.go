@@ -9,12 +9,15 @@ import (
 	_ "embed"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_CreateSpeedtestResults(t *testing.T) {
+	err := godotenv.Load()
+	require.NoError(t, err)
 	dbUrl := os.Getenv("TEST_DB_URL")
 	ctx := context.Background()
 	store, err := NewStore(dbUrl)
@@ -40,6 +43,8 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 }
 
 func Test_GetSpeedtestResults(t *testing.T) {
+	err := godotenv.Load()
+	require.NoError(t, err)
 	dbUrl := os.Getenv("TEST_DB_URL")
 	ctx := context.Background()
 	store, err := NewStore(dbUrl)

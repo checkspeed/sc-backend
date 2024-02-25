@@ -39,17 +39,18 @@ type SpeedtestResults struct {
 	ClientID         string `json:"client_id" db:"client_id"` // unique way to identiy the client device
 	ClientIP         string `json:"client_ip" db:"client_ip"` // Is this really needed for storage?
 	ISP              string `json:"isp" db:"isp"`
+	ISPCode          string `json:"isp_code" db:"isp_code"`
 	ConnectionType   string `json:"connection_type" db:"connection_type"`     // "DSL," "Cable," "Fiber," or "Wireless."
 	ConnectionDevice string `json:"connection_device" db:"connection_device"` // "5G Router," "Mobile," "Fiber," or "Wireless."
 	TestPlatform     string `json:"test_platform" db:"test_platform"`
 
 	// location
+	City           string  `json:"city" db:"city"`
 	Longitude      float64 `json:"longitude" db:"longitude"` // note: consider using a field to depict how accurate
 	Latitude       float64 `json:"latitude" db:"latitude"`
-	City           string  `json:"city" db:"city"`
 	ServerLocation string  `json:"server_location" db:"server_location"`
 	ServerName     string  `json:"server_name" db:"server_name"`
-	TestServerID   string  `json:"test_server_id" db:"test_server_id"`
+	// ServerID       string  `json:"server_id" db:"server_id"`
 	LocationAccess bool    `json:"location_access" db:"location_access"`
 	// there should be another field to indicate how accurate
 
@@ -98,22 +99,22 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
         	download_latency,
         	upload_latency,
 
-        	connection_type,
-        	connection_device,
-        	isp,
-        	client_ip,
         	client_id,
+			client_ip,
+			isp,
+			isp_code,
+			connection_type,
+        	connection_device,
+			test_platform,
+
         	city,
-        	server_name,
-			server_location,
-			test_platform
-
-        	longitude,
+			longitude,
         	latitude,
-
+			server_location,
+			server_name,
         	location_access
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`
 
 	_, err := s.db.Exec(sqlStatement,
 		speedTestResult.ID,
@@ -134,18 +135,19 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
 		speedTestResult.DownloadLatency,
 		speedTestResult.UnloadedLatency,
 
+		speedTestResult.ClientID,
+		speedTestResult.ClientIP,
+		speedTestResult.ISP,
+		speedTestResult.ISPCode,
 		speedTestResult.ConnectionType,
 		speedTestResult.ConnectionDevice,
-		speedTestResult.ISP,
-		speedTestResult.ClientIP,
-		speedTestResult.ClientID,
-		speedTestResult.City,
-		speedTestResult.ServerName,
-		speedTestResult.ServerLocation,
 		speedTestResult.TestPlatform,
-
+		
+		speedTestResult.City,
 		speedTestResult.Longitude,
 		speedTestResult.Latitude,
+		speedTestResult.ServerLocation,
+		speedTestResult.ServerName,
 		speedTestResult.LocationAccess,
 	)
 
