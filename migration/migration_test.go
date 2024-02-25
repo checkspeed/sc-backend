@@ -2,16 +2,21 @@ package migration
 
 import (
 	"database/sql"
+	"os"
 	"testing"
 
-	_ "github.com/lib/pq"
 	_ "embed"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_migration(t *testing.T) {
-	dbUrl := "postgres://uchkkzlm:5FIuFpVS2fd9bwqO3hfeODqBZ29_URlB@jelani.db.elephantsql.com/uchkkzlm"
+	err := godotenv.Load("../.env")
+	require.NoError(t, err)
+	dbUrl := os.Getenv("TEST_DB_URL")
 	db, err := sql.Open("postgres", dbUrl)
 	require.NoError(t, err)
 

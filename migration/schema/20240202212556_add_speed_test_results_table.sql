@@ -20,17 +20,19 @@ CREATE TABLE
         download_latency INT DEFAULT NULL,
         upload_latency INT DEFAULT NULL,
 
+        client_id VARCHAR(50) DEFAULT NULL,
+        client_ip VARCHAR(50) DEFAULT NULL,
+        isp VARCHAR(50) DEFAULT NULL,
+        isp_code VARCHAR(15) DEFAULT NULL,
         connection_type VARCHAR(50) DEFAULT NULL,
         connection_device VARCHAR(50) DEFAULT NULL,
-        isp VARCHAR(50) DEFAULT NULL,
-        client_ip VARCHAR(50) DEFAULT NULL,
-        client_id VARCHAR(50) DEFAULT NULL,
-        city VARCHAR(50) DEFAULT NULL,
-        server_name VARCHAR(50) DEFAULT NULL,
+        test_platform VARCHAR(50) DEFAULT NULL,
 
+        city VARCHAR(50) DEFAULT NULL,
         longitude DECIMAL DEFAULT NULL,
         latitude DECIMAL DEFAULT NULL,
-
+        server_location VARCHAR(50) DEFAULT NULL,
+        server_name VARCHAR(50) DEFAULT NULL,
         location_access BOOLEAN DEFAULT false,
 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
