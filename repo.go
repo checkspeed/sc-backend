@@ -133,7 +133,7 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
 		speedTestResult.LoadedLatency,
 		speedTestResult.UnloadedLatency,
 		speedTestResult.DownloadLatency,
-		speedTestResult.UnloadedLatency,
+		speedTestResult.UploadLatency,
 
 		speedTestResult.ClientID,
 		speedTestResult.ClientIP,
