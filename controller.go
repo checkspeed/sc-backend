@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"encoding/json"
 	"log"
@@ -56,6 +57,7 @@ func (ct *controller) CreateSpeedtestResults(c *gin.Context) {
 		return
 	}
 
+	requestBody.ID = uuid.NewString()
 	if err := ct.store.CreateSpeedtestResults(c.Request.Context(), &requestBody); err != nil {
 		log.Println("failed to store speed test results: ", err.Error())
 		c.JSON(http.StatusInternalServerError, apiResp{Error: err.Error()})
