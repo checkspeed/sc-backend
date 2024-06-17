@@ -48,10 +48,12 @@ type SpeedtestResults struct {
 	City           string  `json:"city" db:"city"`
 	Longitude      float64 `json:"longitude" db:"longitude"` // note: consider using a field to depict how accurate
 	Latitude       float64 `json:"latitude" db:"latitude"`
+	CountryCode    string  `json:"country_code" db:"country_code"` // 3 letter country code
+	CountryName    string  `json:"country_name" db:"country_name"`
 	ServerLocation string  `json:"server_location" db:"server_location"`
 	ServerName     string  `json:"server_name" db:"server_name"`
 	// ServerID       string  `json:"server_id" db:"server_id"`
-	LocationAccess bool    `json:"location_access" db:"location_access"`
+	LocationAccess bool `json:"location_access" db:"location_access"`
 	// there should be another field to indicate how accurate
 
 	CreatedAt time.Time `json:"created_at" db:"created_at"` // time when record is created
@@ -59,9 +61,13 @@ type SpeedtestResults struct {
 	TestTime  time.Time `json:"test_time" db:"test_time"`   // time when the internet test was taken
 }
 
+type GetSpeedtestResultsFilter struct {
+	CountryCode string `json:"country_code"` // 3 letter country code
+}
+
 type Datastore interface {
 	CreateSpeedtestResults(ctx context.Context, speedTestResult *SpeedtestResults) error
-	GetSpeedtestResults(ctx context.Context) ([]SpeedtestResults, error)
+	GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]SpeedtestResults, error)
 
 	CloseConn(ctx context.Context) error
 }
@@ -110,11 +116,13 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
         	city,
 			longitude,
         	latitude,
+			country_code,
+			country_name,
 			server_location,
 			server_name,
         	location_access
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)`
 
 	_, err := s.db.Exec(sqlStatement,
 		speedTestResult.ID,
@@ -142,10 +150,12 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
 		speedTestResult.ConnectionType,
 		speedTestResult.ConnectionDevice,
 		speedTestResult.TestPlatform,
-		
+
 		speedTestResult.City,
 		speedTestResult.Longitude,
 		speedTestResult.Latitude,
+		speedTestResult.CountryCode,
+		speedTestResult.CountryName,
 		speedTestResult.ServerLocation,
 		speedTestResult.ServerName,
 		speedTestResult.LocationAccess,
@@ -154,14 +164,20 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
 	return err
 }
 
-func (s store) GetSpeedtestResults(ctx context.Context) ([]SpeedtestResults, error) {
+func (s store) GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]SpeedtestResults, error) {
 	var results = []SpeedtestResults{}
 	sqlQuery := `
 		SELECT *
 		FROM speed_test_results
 		`
 
-	rows, err := s.db.Queryx(sqlQuery)
+	var args []interface{}
+	if filters.CountryCode != "" {
+		sqlQuery += " WHERE country_code = $"
+		args = append(args, filters.CountryCode)
+	}
+
+	rows, err := s.db.Queryx(sqlQuery, args...)
 	if err != nil {
 		return []SpeedtestResults{}, err
 	}

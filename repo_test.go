@@ -37,9 +37,9 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 	err = store.CreateSpeedtestResults(ctx, &sampleResult)
 	assert.NoError(t, err)
 
-	resp, err := store.GetSpeedtestResults(ctx)
+	_, err = store.GetSpeedtestResults(ctx, GetSpeedtestResultsFilter{})
 	assert.NoError(t, err)
-	fmt.Println(resp)
+	// fmt.Println(resp)
 }
 
 func Test_GetSpeedtestResults(t *testing.T) {
@@ -52,7 +52,7 @@ func Test_GetSpeedtestResults(t *testing.T) {
 
 	defer store.CloseConn(ctx)
 
-	resp, err := store.GetSpeedtestResults(ctx)
+	resp, err := store.GetSpeedtestResults(ctx,  GetSpeedtestResultsFilter{})
 	assert.NoError(t, err)
 	fmt.Println(resp)
 }

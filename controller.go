@@ -72,7 +72,13 @@ func (ct *controller) CreateSpeedtestResults(c *gin.Context) {
 }
 
 func (ct *controller) GetSpeedtestResults(c *gin.Context) {
-	results, err := ct.store.GetSpeedtestResults(c.Request.Context())
+	var filters GetSpeedtestResultsFilter
+	if err := c.BindJSON(&filters); err != nil {
+		log.Println("invalid request body error: ", err.Error())
+		c.JSON(http.StatusBadRequest, apiResp{Error: err.Error()})
+		return
+	}
+	results, err := ct.store.GetSpeedtestResults(c.Request.Context(), filters)
 	if err != nil {
 		log.Println("failed to retrieve speed test results: ", err.Error())
 		c.JSON(http.StatusInternalServerError, apiResp{Error: err.Error()})
