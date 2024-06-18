@@ -1,8 +1,9 @@
-package main
+package config
 
 import (
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 const (

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/checkspeed/sc-backend/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +27,7 @@ type NetworkData struct {
 }
 
 func main() {
-	cfg := LoadConfig()
+	cfg := config.LoadConfig()
 
 	// init db
 	store, err := NewStore(cfg.DBURL)
@@ -49,7 +50,7 @@ func main() {
 	store.CloseConn(context.Background())
 }
 
-func RunServer(ctrl *controller, cfg Config) {
+func RunServer(ctrl *controller, cfg config.Config) {
 	r := gin.Default()
 
 	r.GET("/", welcome)

@@ -9,16 +9,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/checkspeed/sc-backend/internal/config"
 )
 
 type controller struct {
-	cfg   Config
+	cfg   config.Config
 	store Datastore
 }
 
 const Timelayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
-func NewController(cfg Config, store Datastore) *controller {
+func NewController(cfg config.Config, store Datastore) *controller {
 	return &controller{
 		cfg,
 		store,
