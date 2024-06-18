@@ -80,7 +80,7 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *mode
 		speedTestResult.ID,
 
 		speedTestResult.DownloadSpeed,
-		speedTestResult.MaxDownloadSPeed,
+		speedTestResult.MaxDownloadSpeed,
 		speedTestResult.MinDownloadSpeed,
 		speedTestResult.TotalDownload,
 
