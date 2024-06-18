@@ -1,4 +1,4 @@
-package main
+package repositories
 
 import (
 	"context"
@@ -24,15 +24,15 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 	require.NoError(t, err)
 
 	defer store.CloseConn(ctx)
-	
+
 	sampleResult := SpeedtestResults{
-		ID: uuid.NewString(),
+		ID:            uuid.NewString(),
 		DownloadSpeed: 15000,
-		UploadSpeed: 8000,
-		Latency: 27,
-		ISP: "test",
-		ServerName: "test server",
-		ClientID: uuid.NewString(),
+		UploadSpeed:   8000,
+		Latency:       27,
+		ISP:           "test",
+		ServerName:    "test server",
+		ClientID:      uuid.NewString(),
 	}
 	err = store.CreateSpeedtestResults(ctx, &sampleResult)
 	assert.NoError(t, err)
@@ -52,7 +52,7 @@ func Test_GetSpeedtestResults(t *testing.T) {
 
 	defer store.CloseConn(ctx)
 
-	resp, err := store.GetSpeedtestResults(ctx,  GetSpeedtestResultsFilter{})
+	resp, err := store.GetSpeedtestResults(ctx, GetSpeedtestResultsFilter{})
 	assert.NoError(t, err)
 	fmt.Println(resp)
 }
