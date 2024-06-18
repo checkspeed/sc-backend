@@ -9,33 +9,21 @@ import (
 	"syscall"
 
 	"github.com/checkspeed/sc-backend/internal/config"
+	"github.com/checkspeed/sc-backend/internal/controllers"
+	"github.com/checkspeed/sc-backend/internal/repositories"
 	"github.com/gin-gonic/gin"
 )
-
-type apiResp struct {
-	Error   string `json:"error,omitempty"`
-	Message string `json:"message,omitempty"`
-	Data    any    `json:"data,omitempty"`
-}
-
-type NetworkData struct {
-	Isp         string `json:"isp,omitempty"`
-	Longitude   string `json:"longitude"`
-	Latitude    string `json:"latitude"`
-	CountryCode string `json:"country_code3,omitempty"` // 3 letter country code
-	CountryName string `json:"country_name,omitempty"`
-}
 
 func main() {
 	cfg := config.LoadConfig()
 
 	// init db
-	store, err := NewStore(cfg.DBURL)
+	store, err := repositories.NewStore(cfg.DBURL)
 	if err != nil {
 		log.Fatalf("unable to initialize database, %v \n", err.Error())
 	}
 
-	ctrl := NewController(cfg, store)
+	ctrl := controllers.NewController(cfg, store)
 
 	// create channel to listen to shutdown signals
 	shutdownChan := make(chan os.Signal, 1)
@@ -50,7 +38,7 @@ func main() {
 	store.CloseConn(context.Background())
 }
 
-func RunServer(ctrl *controller, cfg config.Config) {
+func RunServer(ctrl *controllers.Controller, cfg config.Config) {
 	r := gin.Default()
 
 	r.GET("/", welcome)
