@@ -8,6 +8,7 @@ import (
 
 	_ "embed"
 
+	"github.com/checkspeed/sc-backend/internal/model"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -25,7 +26,7 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 
 	defer store.CloseConn(ctx)
 
-	sampleResult := SpeedtestResults{
+	sampleResult := model.SpeedtestResults{
 		ID:            uuid.NewString(),
 		DownloadSpeed: 15000,
 		UploadSpeed:   8000,

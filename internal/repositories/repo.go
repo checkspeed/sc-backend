@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"context"
-	"time"
 
+	"github.com/checkspeed/sc-backend/internal/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -13,61 +13,13 @@ const (
 	usersCollection            = "users"
 )
 
-type SpeedtestResults struct {
-	ID string `json:"id"`
-
-	// download
-	DownloadSpeed    int `json:"download_speed" db:"download_speed"`         // average | kbps
-	MaxDownloadSPeed int `json:"max_download_speed" db:"max_download_speed"` // kbps
-	MinDownloadSpeed int `json:"min_download_speed" db:"min_download_speed"` // kbps
-	TotalDownload    int `json:"total_download" db:"total_download"`         // kbp
-
-	// upload
-	UploadSpeed    int `json:"upload_speed" db:"upload_speed"`         // average | kbps
-	MaxUploadSpeed int `json:"max_upload_speed" db:"max_upload_speed"` // kbps
-	MinUploadSpeed int `json:"min_upload_speed" db:"min_upload_speed"` // kbps
-	TotalUpload    int `json:"total_upload" db:"total_upload"`         // kbps
-
-	// latency
-	Latency         int `json:"latency" db:"latency"`                   // average | ms
-	LoadedLatency   int `json:"loaded_latency" db:"loaded_latency"`     // ms
-	UnloadedLatency int `json:"unloaded_latency" db:"unloaded_latency"` // ms
-	DownloadLatency int `json:"download_latency" db:"download_latency"` // ms
-	UploadLatency   int `json:"upload_latency" db:"upload_latency"`     // ms
-
-	// client
-	ClientID         string `json:"client_id" db:"client_id"` // unique way to identiy the client device
-	ClientIP         string `json:"client_ip" db:"client_ip"` // Is this really needed for storage?
-	ISP              string `json:"isp" db:"isp"`
-	ISPCode          string `json:"isp_code" db:"isp_code"`
-	ConnectionType   string `json:"connection_type" db:"connection_type"`     // "DSL," "Cable," "Fiber," or "Wireless."
-	ConnectionDevice string `json:"connection_device" db:"connection_device"` // "5G Router," "Mobile," "Fiber," or "Wireless."
-	TestPlatform     string `json:"test_platform" db:"test_platform"`
-
-	// location
-	City           string  `json:"city" db:"city"`
-	Longitude      float64 `json:"longitude" db:"longitude"` // note: consider using a field to depict how accurate
-	Latitude       float64 `json:"latitude" db:"latitude"`
-	CountryCode    string  `json:"country_code" db:"country_code"` // 3 letter country code
-	CountryName    string  `json:"country_name" db:"country_name"`
-	ServerLocation string  `json:"server_location" db:"server_location"`
-	ServerName     string  `json:"server_name" db:"server_name"`
-	// ServerID       string  `json:"server_id" db:"server_id"`
-	LocationAccess bool `json:"location_access" db:"location_access"`
-	// there should be another field to indicate how accurate
-
-	CreatedAt time.Time `json:"created_at" db:"created_at"` // time when record is created
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"` // time when record is created
-	TestTime  time.Time `json:"test_time" db:"test_time"`   // time when the internet test was taken
-}
-
 type GetSpeedtestResultsFilter struct {
 	CountryCode string `json:"country_code"` // 3 letter country code
 }
 
 type Datastore interface {
-	CreateSpeedtestResults(ctx context.Context, speedTestResult *SpeedtestResults) error
-	GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]SpeedtestResults, error)
+	CreateSpeedtestResults(ctx context.Context, speedTestResult *model.SpeedtestResults) error
+	GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]model.SpeedtestResults, error)
 
 	CloseConn(ctx context.Context) error
 }
@@ -85,7 +37,7 @@ func NewStore(dbUrl string) (store, error) {
 	return store{db}, nil
 }
 
-func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *SpeedtestResults) error {
+func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *model.SpeedtestResults) error {
 	sqlStatement := `
 		INSERT INTO speed_test_results (
 			id,
@@ -164,8 +116,8 @@ func (s store) CreateSpeedtestResults(ctx context.Context, speedTestResult *Spee
 	return err
 }
 
-func (s store) GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]SpeedtestResults, error) {
-	var results = []SpeedtestResults{}
+func (s store) GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResultsFilter) ([]model.SpeedtestResults, error) {
+	var results = []model.SpeedtestResults{}
 	sqlQuery := `
 		SELECT *
 		FROM speed_test_results
@@ -179,14 +131,14 @@ func (s store) GetSpeedtestResults(ctx context.Context, filters GetSpeedtestResu
 
 	rows, err := s.db.Queryx(sqlQuery, args...)
 	if err != nil {
-		return []SpeedtestResults{}, err
+		return []model.SpeedtestResults{}, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var sp SpeedtestResults
+		var sp model.SpeedtestResults
 		err = rows.StructScan(&sp)
 		if err != nil {
-			return []SpeedtestResults{}, err
+			return []model.SpeedtestResults{}, err
 		}
 		results = append(results, sp)
 	}
