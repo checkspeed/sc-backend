@@ -7,10 +7,10 @@ import (
 )
 
 type User struct {
-	ID        string         `json:"id" gorm:"type:uuid;primaryKey"` // UUID primary key
-	Username  string         `json:"username" gorm:"type:varchar(50);unique;not null"`
-	Email     string         `json:"email" gorm:"type:varchar(100);unique;not null"`
-	CreatedAt time.Time      `json:"created_at" gorm:"column:created_at"` // time when record is created
-	UpdatedAt time.Time      `json:"updated_at" gorm:"column:updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"` // Soft delete field
+	ID        string         `json:"id" gorm:"type:uuid;primaryKey"`
+	Username  string         `json:"username" gorm:"unique;not null"`
+	Email     string         `json:"email" gorm:"unique;not null"`
+	CreatedAt time.Time      `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time      `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
