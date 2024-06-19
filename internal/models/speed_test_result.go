@@ -48,4 +48,8 @@ type SpeedTestResult struct {
 	TestTime  time.Time `json:"test_time" gorm:"default:CURRENT_TIMESTAMP;not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP;not null"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP;not null"`
+
+	// Belongs to Relationship
+	Device Device     `gorm:"foreignKey:DeviceID"`
+	Server TestServer `gorm:"foreignKey:ServerID"`
 }

@@ -15,4 +15,7 @@ type Device struct {
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+
+	// Belongs to Relationship
+	User User `gorm:"foreignKey:UserID"`
 }
