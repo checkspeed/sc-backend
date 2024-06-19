@@ -1,4 +1,4 @@
-package model
+package models
 
 type ApiResp struct {
 	Error   string `json:"error,omitempty"`

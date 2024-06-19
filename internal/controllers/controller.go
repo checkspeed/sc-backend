@@ -11,7 +11,7 @@ import (
 	"net/http"
 
 	"github.com/checkspeed/sc-backend/internal/config"
-	"github.com/checkspeed/sc-backend/internal/model"
+	"github.com/checkspeed/sc-backend/internal/models"
 	"github.com/checkspeed/sc-backend/internal/repositories"
 )
 
@@ -36,15 +36,15 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 	resp, err := http.Get(geoUrl)
 	if err != nil {
 		log.Println("error calling ip-api endpoint", err)
-		c.JSON(http.StatusBadRequest, model.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 	}
 
 	defer resp.Body.Close()
 
-	var respBody model.NetworkData
+	var respBody models.NetworkData
 	json.NewDecoder(resp.Body).Decode(&respBody)
 
-	apiResp := model.ApiResp{
+	apiResp := models.ApiResp{
 		Message: "success",
 		Data:    respBody,
 	}
@@ -54,21 +54,21 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 }
 
 func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
-	var requestBody model.SpeedtestResults
+	var requestBody models.SpeedTestResult
 	if err := c.BindJSON(&requestBody); err != nil {
 		log.Println("invalid request body error: ", err.Error())
-		c.JSON(http.StatusBadRequest, model.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 		return
 	}
 
 	requestBody.ID = uuid.NewString()
-	if err := ct.store.CreateSpeedtestResults(c.Request.Context(), &requestBody); err != nil {
+	if err := ct.store.CreateSpeedtestResult(c.Request.Context(), &requestBody); err != nil {
 		log.Println("failed to store speed test results: ", err.Error())
-		c.JSON(http.StatusInternalServerError, model.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
 		return
 	}
 
-	apiResp := model.ApiResp{
+	apiResp := models.ApiResp{
 		Message: "success",
 	}
 
@@ -76,19 +76,19 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 }
 
 func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
-	var filters repositories.GetSpeedtestResultsFilter
+	var filters repositories.GetSpeedtestResultFilter
 	if err := c.BindJSON(&filters); err != nil {
 		log.Println("invalid request body error: ", err.Error())
-		c.JSON(http.StatusBadRequest, model.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 		return
 	}
-	results, err := ct.store.GetSpeedtestResults(c.Request.Context(), filters)
+	results, err := ct.store.GetSpeedtestResult(c.Request.Context(), filters)
 	if err != nil {
 		log.Println("failed to retrieve speed test results: ", err.Error())
-		c.JSON(http.StatusInternalServerError, model.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
 	}
 
-	apiResp := model.ApiResp{
+	apiResp := models.ApiResp{
 		Message: "success",
 		Data:    results,
 	}

@@ -1,10 +1,10 @@
-package model
+package models
 
 import (
 	"time"
 )
 
-type SpeedtestResults struct {
+type SpeedTestResult struct {
 	ID string `json:"id" gorm:"type:uuid;primaryKey"`
 
 	// Download
