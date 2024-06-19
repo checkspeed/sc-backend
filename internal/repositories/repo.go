@@ -16,13 +16,13 @@ const (
 	usersCollection           = "users"
 )
 
-type GetSpeedtestResultFilter struct {
+type GetSpeedTestResultsFilter struct {
 	CountryCode string `json:"country_code"` // 3 letter country code
 }
 
 type Datastore interface {
 	CreateSpeedtestResult(ctx context.Context, speedTestResult *models.SpeedTestResult) error
-	GetSpeedtestResult(ctx context.Context, filters GetSpeedtestResultFilter) ([]models.SpeedTestResult, error)
+	GetSpeedTestResults(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResult, error)
 
 	CloseConn(ctx context.Context) error
 }
@@ -47,7 +47,7 @@ func NewStore(dbUrl string) (store, error) {
 }
 
 func (s *store) RunAutoMigrate() error {
-	err := s.db.AutoMigrate(&models.SpeedTestResult{})
+	err := s.db.AutoMigrate(&models.User{}, &models.TestServer{}, &models.Device{}, &models.SpeedTestResult{})
 	if err != nil {
 		return fmt.Errorf("failed to auto migrate models: %v", err)
 	}
@@ -55,12 +55,12 @@ func (s *store) RunAutoMigrate() error {
 	return nil
 }
 
-func (s *store) RunDropTable(tableName string) error {
-	err := s.db.Migrator().DropTable(tableName)
+func (s *store) RunDropTable() error {
+	err := s.db.Migrator().DropTable(&models.User{}, &models.TestServer{}, &models.Device{}, &models.SpeedTestResult{})
 	if err != nil {
 		return fmt.Errorf("failed to auto migrate models: %v", err)
 	}
-	fmt.Println("table dropped")
+	fmt.Println("tables dropped")
 	return nil
 }
 
@@ -70,6 +70,33 @@ func (s store) CloseConn(ctx context.Context) error {
 		return err
 	}
 	return db.Close()
+}
+
+func (s store) CreateSpeedtestResult(ctx context.Context, speedTestResult *models.SpeedTestResult) error {
+	result := s.db.WithContext(ctx).Create(&speedTestResult)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s store) GetSpeedTestResults(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResult, error) {
+	var speedTestResult []models.SpeedTestResult
+
+	query := s.db.WithContext(ctx)
+	if filters.CountryCode != "" {
+		query.Where("name = ?", filters.CountryCode)
+	}
+	result := query.Find(&speedTestResult)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	fmt.Println("Rows affected:", result.RowsAffected)
+
+	return speedTestResult, nil
+
 }
 
 // func (s store) CreateSpeedtestResult(ctx context.Context, speedTestResult *models.SpeedtestResult) error {
