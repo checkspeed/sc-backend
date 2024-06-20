@@ -7,9 +7,11 @@ type ApiResp struct {
 }
 
 type NetworkData struct {
-	Isp         string `json:"isp,omitempty"`
-	Longitude   string `json:"longitude"`
-	Latitude    string `json:"latitude"`
-	CountryCode string `json:"country_code3,omitempty"` // 3 letter country code
-	CountryName string `json:"country_name,omitempty"`
+	Isp           string `json:"isp,omitempty"`
+	Longitude     string `json:"longitude"`
+	Latitude      string `json:"latitude"`
+	CountryCode   string `json:"country_code2,omitempty"` // 3 letter country code
+	CountryName   string `json:"country_name,omitempty"`
+	ConitnentName string `json:"continent_name,omitempty"`
+	ContinentCode string `json:"continent_code,omitempty"`
 }
