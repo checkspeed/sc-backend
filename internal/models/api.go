@@ -14,4 +14,5 @@ type NetworkData struct {
 	CountryName   string `json:"country_name,omitempty"`
 	ConitnentName string `json:"continent_name,omitempty"`
 	ContinentCode string `json:"continent_code,omitempty"`
+	State         string `json:"state_prov,omitempty"`
 }
