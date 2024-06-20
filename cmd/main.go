@@ -45,7 +45,7 @@ func RunServer(ctrl *controllers.Controller, cfg config.Config) {
 	r.GET("/", welcome)
 	r.GET("/network", ctrl.GetNetworkInfo)
 	r.POST("/speed_test_result", ctrl.CreateSpeedtestResults)
-	r.GET("/speed_test_result/list", ctrl.GetSpeedtestResults)
+	r.POST("/speed_test_result/list", ctrl.GetSpeedtestResults)
 
 	r.Run(":" + cfg.Port)
 }
