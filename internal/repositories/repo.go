@@ -85,8 +85,9 @@ func (s store) GetSpeedTestResults(ctx context.Context, filters GetSpeedTestResu
 	var speedTestResult []models.SpeedTestResult
 
 	query := s.db.WithContext(ctx)
+
 	if filters.CountryCode != "" {
-		query.Where("name = ?", filters.CountryCode)
+		query = query.Where("country_code = ?", filters.CountryCode)
 	}
 	result := query.Find(&speedTestResult)
 
