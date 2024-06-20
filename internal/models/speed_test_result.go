@@ -27,13 +27,13 @@ type SpeedTestResult struct {
 	UploadLatency   int `json:"upload_latency"`          // ms
 
 	// Device and Server
-	DeviceID         string `json:"device_id" gorm:"type:uuid"`
+	DeviceID         string `json:"device_id" gorm:"type:uuid;default:null"`
 	ISP              string `json:"isp" gorm:"type:varchar(50)"`
 	ISPCode          string `json:"isp_code" gorm:"type:varchar(15)"`
 	ConnectionType   string `json:"connection_type" gorm:"type:varchar(50)"`
 	ConnectionDevice string `json:"connection_device" gorm:"type:varchar(50)"`
 	TestPlatform     string `json:"test_platform" gorm:"type:varchar(50)"`
-	ServerID         string `json:"server_id" gorm:"type:uuid"`
+	ServerID         string `json:"server_id" gorm:"type:uuid;default:null"`
 
 	// Location
 	City           string  `json:"city" gorm:"type:varchar(50)"`
