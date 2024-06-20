@@ -40,6 +40,8 @@ type SpeedTestResult struct {
 	State          string  `json:"state" gorm:"type:varchar(50)"`
 	CountryCode    string  `json:"country_code" gorm:"type:varchar(5)"`
 	CountryName    string  `json:"country_name" gorm:"type:varchar(50)"`
+	ContinentCode  string  `json:"continent_code" gorm:"type:varchar(5)"`
+	ContinentName  string  `json:"continent_name" gorm:"type:varchar(50)"`
 	Longitude      float64 `json:"longitude"`
 	Latitude       float64 `json:"latitude"`
 	LocationAccess bool    `json:"location_access" gorm:"default:false"`
