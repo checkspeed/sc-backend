@@ -12,7 +12,7 @@ import (
 
 	"github.com/checkspeed/sc-backend/internal/config"
 	"github.com/checkspeed/sc-backend/internal/models"
-	"github.com/checkspeed/sc-backend/internal/repositories"
+	"github.com/checkspeed/sc-backend/internal/db/repositories"
 )
 
 type Controller struct {
