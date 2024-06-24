@@ -11,21 +11,26 @@ import (
 	"net/http"
 
 	"github.com/checkspeed/sc-backend/internal/config"
-	"github.com/checkspeed/sc-backend/internal/models"
 	"github.com/checkspeed/sc-backend/internal/db/repositories"
+	"github.com/checkspeed/sc-backend/internal/models"
 )
 
 type Controller struct {
 	cfg   config.Config
-	store repositories.Datastore
+	devicesRepo repositories.Devices
+	speedTRepo repositories.SpeedTestResults
+	testSrvRepo repositories.TestServers
 }
 
 const Timelayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
-func NewController(cfg config.Config, store repositories.Datastore) *Controller {
+func NewController(cfg config.Config, devicesRepo repositories.Devices, speedTRepo repositories.SpeedTestResults, testSrvRepo repositories.TestServers) *Controller {
+
 	return &Controller{
-		cfg,
-		store,
+		cfg: cfg,
+		devicesRepo: devicesRepo,
+		speedTRepo: speedTRepo,
+		testSrvRepo: testSrvRepo,
 	}
 }
 

@@ -10,10 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	SpeedtestResultCollection = "speed_test_results"
-	usersCollection           = "users"
-)
+// const (
+// 	SpeedtestResultCollection = "speed_test_results"
+// 	usersCollection           = "users"
+// )
 
 type GetSpeedTestResultsFilter struct {
 	CountryCode string `json:"country_code"` // 3 letter country code
@@ -22,20 +22,13 @@ type GetSpeedTestResultsFilter struct {
 type SpeedTestResults interface {
 	Create(ctx context.Context, speedTestResult *models.SpeedTestResult) error
 	Get(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResult, error)
-
-	CloseConn(ctx context.Context) error
 }
 
 type speedTestResultsRepo struct {
 	db *gorm.DB
 }
 
-type SpeedTestResultsRepo interface {
-	CloseConn(ctx context.Context) error
-	DB() *gorm.DB
-}
-
-func New(store db.Store) (speedTestResultsRepo, error) {
+func NewSpeedTestResultsRepo(store db.Store) (speedTestResultsRepo, error) {
 	db := store.DB()
 
 	return speedTestResultsRepo{db}, nil
@@ -66,5 +59,4 @@ func (s speedTestResultsRepo)  Get(ctx context.Context, filters GetSpeedTestResu
 	fmt.Println("Rows affected:", result.RowsAffected)
 
 	return speedTestResult, nil
-
 }
