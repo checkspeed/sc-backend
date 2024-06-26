@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,27 +12,38 @@ import (
 	"net/http"
 
 	"github.com/checkspeed/sc-backend/internal/config"
-	"github.com/checkspeed/sc-backend/internal/db/repositories"
+	"github.com/checkspeed/sc-backend/internal/db"
 	"github.com/checkspeed/sc-backend/internal/models"
 )
 
 type Controller struct {
-	cfg   config.Config
-	devicesRepo repositories.Devices
-	speedTRepo repositories.SpeedTestResults
-	testSrvRepo repositories.TestServers
+	cfg         config.Config
+	devicesRepo db.Devices
+	speedTRepo  db.SpeedTestResults
+	testSrvRepo db.TestServers
 }
 
 const Timelayout = "Mon, 02 Jan 2006 15:04:05 MST"
 
-func NewController(cfg config.Config, devicesRepo repositories.Devices, speedTRepo repositories.SpeedTestResults, testSrvRepo repositories.TestServers) *Controller {
-
-	return &Controller{
-		cfg: cfg,
-		devicesRepo: devicesRepo,
-		speedTRepo: speedTRepo,
-		testSrvRepo: testSrvRepo,
+func NewController(cfg config.Config, store db.Store) (*Controller, error) {
+	devicesRepo, err := db.NewDevicesRepo(store)
+	if err != nil {
+		return nil, err
 	}
+	testSrvRepo, err := db.NewTestServerRepo(store)
+	if err != nil {
+		return nil, err
+	}
+	speedTRepo, err := db.NewSpeedTestResultsRepo(store)
+	if err != nil {
+		return nil, err
+	}
+	return &Controller{
+		cfg:         cfg,
+		devicesRepo: devicesRepo,
+		speedTRepo:  speedTRepo,
+		testSrvRepo: testSrvRepo,
+	}, nil
 }
 
 func (ct *Controller) GetNetworkInfo(c *gin.Context) {
@@ -58,37 +70,104 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, apiResp)
 }
 
+func (ct *Controller) GetGeoLocationInfo(c *gin.Context) {
+	ipAddr := c.Request.URL.Query().Get("ip")
+
+	geoUrl := fmt.Sprintf("https://get.geojs.io/v1/ip/geo.json?ip=%s", ipAddr)
+	resp, err := http.Get(geoUrl)
+	if err != nil {
+		log.Println("error calling ip-geo endpoint", err)
+		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
+	}
+
+	defer resp.Body.Close()
+
+	var respBody models.GeoLocationData
+	json.NewDecoder(resp.Body).Decode(&respBody)
+
+	apiResp := models.ApiResp{
+		Message: "success",
+		Data:    respBody,
+	}
+
+	// send response to user
+	c.JSON(http.StatusOK, apiResp)
+}
+
 func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
-	var requestBody models.SpeedTestResult
+	var requestBody models.CreateSpeedTestResult
 	if err := c.BindJSON(&requestBody); err != nil {
 		log.Println("invalid request body error: ", err.Error())
 		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 		return
 	}
 
-	requestBody.ID = uuid.NewString()
-	if err := ct.store.CreateSpeedtestResult(c.Request.Context(), &requestBody); err != nil {
+	// get device id if not provided
+	if requestBody.DeviceID == "" {
+		device := models.Device{
+			ID:               uuid.NewString(),
+			Identifier:       requestBody.Device.Identifier,
+			UserID:           &requestBody.Device.UserID,
+			OS:               requestBody.Device.OS,
+			DeviceType:       requestBody.Device.DeviceType,
+			Manufacturer:     requestBody.Device.Manufacturer,
+			Model:            requestBody.Device.Model,
+			ScreenResolution: requestBody.Device.ScreenResolution,
+		}
+		deviceID, _, err := ct.devicesRepo.GetOrCreate(c.Request.Context(), device)
+		if err != nil {
+			log.Println("failed to get or create device: ", err.Error())
+			c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+			return
+		}
+		requestBody.DeviceID = deviceID
+	}
+
+	// get server id
+	ts := models.TestServer{
+		ID:         uuid.NewString(),
+		Identifier: requestBody.TestServer.Identifier,
+		Name:       requestBody.TestServer.Name,
+		City:       requestBody.TestServer.City,
+		Country:    requestBody.TestServer.Country,
+	}
+	serverID, _, err := ct.testSrvRepo.GetOrCreate(c.Request.Context(), ts)
+	if err != nil {
+		log.Println("failed to get or test server: ", err.Error())
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+		return
+	}
+	requestBody.ServerID = serverID
+
+	speedTestResult, err := transformSpeedTestResult(requestBody)
+	if err != nil {
+		log.Println("failed to transform input: ", err.Error())
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+		return
+	}
+	if err := ct.speedTRepo.Create(c.Request.Context(), &speedTestResult); err != nil {
 		log.Println("failed to store speed test results: ", err.Error())
 		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
 		return
 	}
 
-	apiResp := models.ApiResp{
+	apiResp := models.CreateSpeedTestResultResposnet{
 		Message: "success",
+		DeviceID: speedTestResult.DeviceID,
 	}
 
 	c.JSON(http.StatusOK, apiResp)
 }
 
 func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
-	var filters repositories.GetSpeedTestResultsFilter
+	var filters db.GetSpeedTestResultsFilter
 
 	if err := c.BindJSON(&filters); err != nil {
 		log.Println("invalid request body error: ", err.Error())
 		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 		return
 	}
-	results, err := ct.store.GetSpeedTestResults(c.Request.Context(), filters)
+	results, err := ct.speedTRepo.Get(c.Request.Context(), filters)
 	if err != nil {
 		log.Println("failed to retrieve speed test results: ", err.Error())
 		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
@@ -100,4 +179,46 @@ func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, apiResp)
+}
+
+func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedTestResult, error) {
+	testTime, err := time.Parse(time.RFC1123, input.TestTime)
+	if err != nil {
+		return models.SpeedTestResult{}, err
+	}
+	return models.SpeedTestResult{
+		ID:               uuid.NewString(),
+		DownloadSpeed:    input.DownloadSpeed,
+		MaxDownloadSpeed: input.MaxDownloadSpeed,
+		MinDownloadSpeed: input.MinDownloadSpeed,
+		TotalDownload:    input.TotalDownload,
+		UploadSpeed:      input.UploadSpeed,
+		MaxUploadSpeed:   input.MaxUploadSpeed,
+		MinUploadSpeed:   input.MinUploadSpeed,
+		TotalUpload:      input.TotalUpload,
+		Latency:          input.Latency,
+		LoadedLatency:    input.LoadedLatency,
+		UnloadedLatency:  input.UnloadedLatency,
+		DownloadLatency:  input.DownloadLatency,
+		UploadLatency:    input.UploadLatency,
+		DeviceID:         input.DeviceID,
+		ISP:              input.ISP,
+		ISPCode:          input.ISPCode,
+		ConnectionType:   input.ConnectionType,
+		ConnectionDevice: input.ConnectionDevice,
+		TestPlatform:     input.TestPlatform,
+		ServerID:         input.ServerID,
+		City:             input.City,
+		State:            input.State,
+		CountryCode:      input.CountryCode,
+		CountryName:      input.CountryName,
+		ContinentCode:    input.ContinentCode,
+		ContinentName:    input.ContinentName,
+		Longitude:        input.Longitude,
+		Latitude:         input.Latitude,
+		LocationAccess:   input.LocationAccess,
+		TestTime:         testTime,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}, nil
 }

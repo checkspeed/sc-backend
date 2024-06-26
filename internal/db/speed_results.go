@@ -1,10 +1,8 @@
-package repositories
+package db
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/checkspeed/sc-backend/internal/db"
 	"github.com/checkspeed/sc-backend/internal/models"
 	_ "github.com/lib/pq"
 	"gorm.io/gorm"
@@ -28,7 +26,7 @@ type speedTestResultsRepo struct {
 	db *gorm.DB
 }
 
-func NewSpeedTestResultsRepo(store db.Store) (speedTestResultsRepo, error) {
+func NewSpeedTestResultsRepo(store Store) (speedTestResultsRepo, error) {
 	db := store.DB()
 
 	return speedTestResultsRepo{db}, nil
@@ -51,12 +49,12 @@ func (s speedTestResultsRepo)  Get(ctx context.Context, filters GetSpeedTestResu
 	if filters.CountryCode != "" {
 		query = query.Where("country_code = ?", filters.CountryCode)
 	}
+
 	result := query.Find(&speedTestResult)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	fmt.Println("Rows affected:", result.RowsAffected)
 
 	return speedTestResult, nil
 }

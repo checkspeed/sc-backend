@@ -6,11 +6,17 @@ import (
 	"gorm.io/gorm"
 )
 
+type CreateUser struct {
+	ID        string         `json:"id,omitempty"`
+	Username  string         `json:"username,omitempty"`
+	Email     string         `json:"email,omitempty"`
+}
+
 type User struct {
-	ID        string         `json:"id" gorm:"type:uuid;primaryKey"`
-	Username  string         `json:"username" gorm:"unique;not null"`
-	Email     string         `json:"email" gorm:"unique;not null"`
-	CreatedAt time.Time      `json:"created_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time      `json:"updated_at" gorm:"not null;default:CURRENT_TIMESTAMP"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+	ID        string         `json:"id"`
+	Username  string         `json:"username"`
+	Email     string         `json:"email"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
 }

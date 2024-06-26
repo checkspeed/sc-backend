@@ -15,6 +15,7 @@ CREATE TABLE
         id UUID NOT NULL PRIMARY KEY,
         
         name VARCHAR(100),
+        identifier VARCHAR(100) UNIQUE NOT NULL,
         city VARCHAR(100),
         country VARCHAR(100) NOT NULL,
         url VARCHAR(255),
@@ -28,10 +29,13 @@ CREATE TABLE
     IF NOT EXISTS devices (
        id UUID NOT NULL PRIMARY KEY,
 
-        device_identifier VARCHAR(100) UNIQUE NOT NULL,
-        user_id UUID,
+        user_id UUID DEFAULT NULL,
+        identifier VARCHAR(100) UNIQUE NOT NULL,
         os VARCHAR(50),
         device_type VARCHAR(50),
+        manufacturer VARCHAR(50),
+        model VARCHAR(50),
+        screen_resolution VARCHAR(50),
 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
