@@ -124,20 +124,20 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 	}
 
 	// get server id
-	ts := models.TestServer{
-		ID:         uuid.NewString(),
-		Identifier: requestBody.TestServer.Identifier,
-		Name:       requestBody.TestServer.Name,
-		City:       requestBody.TestServer.City,
-		Country:    requestBody.TestServer.Country,
-	}
-	serverID, _, err := ct.testSrvRepo.GetOrCreate(c.Request.Context(), ts)
-	if err != nil {
-		log.Println("failed to get or test server: ", err.Error())
-		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
-		return
-	}
-	requestBody.TestServer.ID = serverID
+	// ts := models.TestServer{
+	// 	ID:         uuid.NewString(),
+	// 	Identifier: requestBody.TestServer.Identifier,
+	// 	Name:       requestBody.TestServer.Name,
+	// 	City:       requestBody.TestServer.City,
+	// 	Country:    requestBody.TestServer.Country,
+	// }
+	// serverID, _, err := ct.testSrvRepo.GetOrCreate(c.Request.Context(), ts)
+	// if err != nil {
+	// 	log.Println("failed to get or test server: ", err.Error())
+	// 	c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+	// 	return
+	// }
+	// requestBody.TestServer.ID = serverID
 
 	speedTestResult, err := transformSpeedTestResult(requestBody)
 	if err != nil {
@@ -207,8 +207,8 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		ConnectionType:   input.ConnectionType,
 		ConnectionDevice: input.ConnectionDevice,
 		TestPlatform:     input.TestPlatform,
-		ServerID:         input.TestServer.ID,
-		ServerName:       input.TestServer.Name,
+		// ServerID:         input.TestServer.ID,
+		ServerName:       input.ServerName,
 		City:             input.City,
 		State:            input.State,
 		CountryCode:      input.CountryCode,

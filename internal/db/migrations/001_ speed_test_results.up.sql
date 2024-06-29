@@ -69,7 +69,6 @@ CREATE TABLE IF NOT EXISTS speed_test_results (
     connection_type VARCHAR(50) DEFAULT NULL,
     connection_device VARCHAR(50) DEFAULT NULL,
     test_platform VARCHAR(50) DEFAULT NULL,
-    server_id UUID,
     server_name VARCHAR(50),
 
     city VARCHAR(50) DEFAULT NULL,
@@ -84,6 +83,5 @@ CREATE TABLE IF NOT EXISTS speed_test_results (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
-    FOREIGN KEY (device_id) REFERENCES devices(id),
-    FOREIGN KEY (server_id) REFERENCES test_servers(id)
+    FOREIGN KEY (device_id) REFERENCES devices(id)
 );
