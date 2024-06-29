@@ -28,15 +28,6 @@ func NewDevicesRepo(store Store) (*devices, error) {
 func (d *devices) GetOrCreate(ctx context.Context, device models.Device) (string, int64, error) {
 resp := d.db.WithContext(ctx).
 		Where("identifier = ?", device.Identifier).
-		// Attrs(models.Device{
-		// 	ID: device.ID,
-		// 	OS:              device.OS,
-		// 	Manufacturer:    device.Manufacturer,
-		// 	Model:           device.Model,
-		// 	ScreenResolution: device.ScreenResolution,
-		// 	DeviceType:      device.DeviceType,
-		// 	UserID:          device.UserID,
-		// }).
 		Attrs(&device).
 		FirstOrCreate(&device).
 		Select("id")

@@ -104,10 +104,15 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 
 	// get device id if not provided
 	if requestBody.DeviceID == "" {
+		// var userID *string
+		// userID = nil
+		// if requestBody.Device.UserID != "" {
+		// 	userID = &requestBody.Device.UserID
+		// } 
 		device := models.Device{
 			ID:               uuid.NewString(),
 			Identifier:       requestBody.Device.Identifier,
-			UserID:           &requestBody.Device.UserID,
+			// UserID:           userID,
 			OS:               requestBody.Device.OS,
 			DeviceType:       requestBody.Device.DeviceType,
 			Manufacturer:     requestBody.Device.Manufacturer,
@@ -208,16 +213,16 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		ConnectionDevice: input.ConnectionDevice,
 		TestPlatform:     input.TestPlatform,
 		// ServerID:         input.TestServer.ID,
-		ServerName:       input.ServerName,
-		City:             input.City,
-		State:            input.State,
-		CountryCode:      input.CountryCode,
-		CountryName:      input.CountryName,
-		ContinentCode:    input.ContinentCode,
-		ContinentName:    input.ContinentName,
-		Longitude:        input.Longitude,
-		Latitude:         input.Latitude,
-		LocationAccess:   input.LocationAccess,
+		ServerName:     input.ServerName,
+		City:           input.City,
+		State:          input.State,
+		CountryCode:    input.CountryCode,
+		CountryName:    input.CountryName,
+		ContinentCode:  input.ContinentCode,
+		ContinentName:  input.ContinentName,
+		Longitude:      input.Longitude,
+		Latitude:       input.Latitude,
+		LocationAccess: input.LocationAccess,
 		// TestTime:         testTime,
 		TestTime:  time.Now(),
 		CreatedAt: time.Now(),
