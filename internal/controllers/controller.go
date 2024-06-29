@@ -137,7 +137,7 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
 		return
 	}
-	requestBody.ServerID = serverID
+	requestBody.TestServer.ID = serverID
 
 	speedTestResult, err := transformSpeedTestResult(requestBody)
 	if err != nil {
@@ -151,8 +151,8 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		return
 	}
 
-	apiResp := models.CreateSpeedTestResultResposnet{
-		Message: "success",
+	apiResp := models.CreateSpeedTestResultResposne{
+		Message:  "success",
 		DeviceID: speedTestResult.DeviceID,
 	}
 
@@ -182,10 +182,10 @@ func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
 }
 
 func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedTestResult, error) {
-	testTime, err := time.Parse(time.RFC1123, input.TestTime)
-	if err != nil {
-		return models.SpeedTestResult{}, err
-	}
+	// testTime, err := time.Parse(time.RFC1123, input.TestTime)
+	// if err != nil {
+	// 	return models.SpeedTestResult{}, err
+	// }
 	return models.SpeedTestResult{
 		ID:               uuid.NewString(),
 		DownloadSpeed:    input.DownloadSpeed,
@@ -207,7 +207,8 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		ConnectionType:   input.ConnectionType,
 		ConnectionDevice: input.ConnectionDevice,
 		TestPlatform:     input.TestPlatform,
-		ServerID:         input.ServerID,
+		ServerID:         input.TestServer.ID,
+		ServerName:       input.TestServer.Name,
 		City:             input.City,
 		State:            input.State,
 		CountryCode:      input.CountryCode,
@@ -217,8 +218,9 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		Longitude:        input.Longitude,
 		Latitude:         input.Latitude,
 		LocationAccess:   input.LocationAccess,
-		TestTime:         testTime,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		// TestTime:         testTime,
+		TestTime:  time.Now(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil
 }

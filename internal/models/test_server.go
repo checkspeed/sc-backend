@@ -7,10 +7,11 @@ import (
 )
 
 type CreateTestServer struct {
-	Identifier string         `json:"identifier"`
-	Name       string         `json:"name"`
-	City       string         `json:"city"`
-	Country    string         `json:"country"`
+	ID         string `json:"-"`
+	Identifier string `json:"identifier"`
+	Name       string `json:"name"`
+	City       string `json:"city"`
+	Country    string `json:"country"`
 }
 
 type TestServer struct {

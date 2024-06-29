@@ -32,7 +32,6 @@ type CreateSpeedTestResult struct {
 	ConnectionType   string `json:"connection_type,omitempty"`
 	ConnectionDevice string `json:"connection_device,omitempty"`
 	TestPlatform     string `json:"test_platform,omitempty"`
-	ServerID         string `json:"server_id,omitempty"`
 
 	// Location
 	City           string  `json:"city,omitempty"`
@@ -54,10 +53,10 @@ type CreateSpeedTestResult struct {
 	TestServer CreateTestServer `json:"test_server,omitempty"`
 }
 
-type CreateSpeedTestResultResposnet struct {
+type CreateSpeedTestResultResposne struct {
 	Error    string `json:"error,omitempty"`
 	Message  string `json:"message,omitempty"`
-	DeviceID string `json:"device_id,omitempty"`
+	DeviceID string `json:"device,omitempty"`
 }
 
 type SpeedTestResult struct {
@@ -90,6 +89,7 @@ type SpeedTestResult struct {
 	ConnectionDevice string `json:"connection_device"`
 	TestPlatform     string `json:"test_platform"`
 	ServerID         string `json:"server_id"`
+	ServerName         string `json:"server_name"`
 
 	// Location
 	City           string  `json:"city"`

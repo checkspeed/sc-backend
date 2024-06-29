@@ -123,3 +123,15 @@ func Test_GetOrCreate(t *testing.T) {
 
 	})
 }
+
+// func Test_RunUpMigration(t *testing.T) {
+// 	ctx := context.Background()
+// 	store, err := NewStore(databaseUrl)
+// 	require.NoError(t, err)
+// 	t.Run("up migration", func(t *testing.T) {
+// 		migrator, err := NewMigrator(store)
+// 		require.NoError(t, err)
+// 		err = migrator.Up(ctx)
+// 		assert.NoError(t, err)
+// 	})
+// }

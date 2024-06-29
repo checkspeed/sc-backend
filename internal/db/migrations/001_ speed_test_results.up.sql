@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS speed_test_results (
     connection_device VARCHAR(50) DEFAULT NULL,
     test_platform VARCHAR(50) DEFAULT NULL,
     server_id UUID,
+    server_name VARCHAR(50),
 
     city VARCHAR(50) DEFAULT NULL,
     state VARCHAR(50) DEFAULT NULL,
