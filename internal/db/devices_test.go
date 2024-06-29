@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/checkspeed/sc-backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -126,7 +128,9 @@ func Test_GetOrCreate(t *testing.T) {
 
 func Test_RunUpMigration(t *testing.T) {
 	ctx := context.Background()
-	databaseUrl := "postgres://aesuxgse:26nyPHEXNXX0xBJ_oeu1eq61l8BGNI3P@silly.db.elephantsql.com/aesuxgse"
+	err := godotenv.Load()
+	require.NoError(t, err)
+	databaseUrl := os.Getenv("TEST_DB_URL")
 	store, err := NewStore(databaseUrl)
 	require.NoError(t, err)
 	t.Run("up migration", func(t *testing.T) {
