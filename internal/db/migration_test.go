@@ -78,7 +78,6 @@ package db
 // // 	m.Run()
 // // }
 
-// // postgres://aesuxgse:26nyPHEXNXX0xBJ_oeu1eq61l8BGNI3P@silly.db.elephantsql.com/aesuxgse
 
 // func Test_RunUpMigration(t *testing.T) {
 // 	ctx := context.Background()
