@@ -71,10 +71,11 @@ CREATE TABLE IF NOT EXISTS speed_test_results (
     test_platform VARCHAR(50) DEFAULT NULL,
     server_name VARCHAR(50),
 
-    city VARCHAR(50) DEFAULT NULL,
     state VARCHAR(50) DEFAULT NULL,
     country_code VARCHAR(5) DEFAULT NULL,
     country_name VARCHAR(50) DEFAULT NULL,
+    continent_code VARCHAR(5) DEFAULT NULL,
+    continent_name VARCHAR(50) DEFAULT NULL,
     longitude DECIMAL DEFAULT NULL,
     latitude DECIMAL DEFAULT NULL,
     location_access BOOLEAN DEFAULT false,

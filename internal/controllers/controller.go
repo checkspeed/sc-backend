@@ -103,7 +103,7 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 	}
 
 	// get device id if not provided
-	if requestBody.DeviceID == "" {
+	if requestBody.DeviceID == "" || requestBody.DeviceID == "undefined" {
 		// var userID *string
 		// userID = nil
 		// if requestBody.Device.UserID != "" {
@@ -214,7 +214,6 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		TestPlatform:     input.TestPlatform,
 		// ServerID:         input.TestServer.ID,
 		ServerName:     input.ServerName,
-		City:           input.City,
 		State:          input.State,
 		CountryCode:    input.CountryCode,
 		CountryName:    input.CountryName,

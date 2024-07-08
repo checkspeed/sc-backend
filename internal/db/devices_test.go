@@ -126,9 +126,9 @@ func Test_GetOrCreate(t *testing.T) {
 	})
 }
 
-func Test_RunUpMigration(t *testing.T) {
+func Test_RunManualUpMigration(t *testing.T) {
 	ctx := context.Background()
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	require.NoError(t, err)
 	databaseUrl := os.Getenv("TEST_DB_URL")
 	store, err := NewStore(databaseUrl)
