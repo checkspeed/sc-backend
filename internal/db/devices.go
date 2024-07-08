@@ -24,9 +24,8 @@ func NewDevicesRepo(store Store) (*devices, error) {
 	}, nil
 }
 
-
 func (d *devices) GetOrCreate(ctx context.Context, device models.Device) (string, int64, error) {
-resp := d.db.WithContext(ctx).
+	resp := d.db.WithContext(ctx).
 		Where("identifier = ?", device.Identifier).
 		Attrs(&device).
 		FirstOrCreate(&device).
@@ -37,4 +36,17 @@ resp := d.db.WithContext(ctx).
 	}
 
 	return device.ID, resp.RowsAffected, nil
+}
+
+func (d *devices) GetByID(ctx context.Context, id string) (*models.Device, error) {
+	var device models.Device
+	resp := d.db.WithContext(ctx).
+		Where("id = ?", id).
+		Take(&device)
+
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	return &device, nil
 }

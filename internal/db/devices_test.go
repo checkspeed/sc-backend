@@ -123,6 +123,13 @@ func Test_GetOrCreate(t *testing.T) {
 		assert.Equal(t, id, id2)
 		assert.Equal(t, int64(0), rowsAffected2)
 
+		// Perform GetByID to validate the created fields
+		dbDevice, err := repo.GetByID(ctx, id)
+		assert.NoError(t, err)
+		assert.Equal(t, testDevice.Identifier, dbDevice.Identifier)
+		assert.Equal(t, testDevice.OS, dbDevice.OS)
+		assert.Equal(t, testDevice.DeviceType, dbDevice.DeviceType)
+
 	})
 }
 

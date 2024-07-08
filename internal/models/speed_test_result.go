@@ -92,7 +92,6 @@ type SpeedTestResult struct {
 	ServerName       string `json:"server_name"`
 
 	// Location
-	City           string  `json:"city"`
 	State          string  `json:"state"`
 	CountryCode    string  `json:"country_code"`
 	CountryName    string  `json:"country_name"`
