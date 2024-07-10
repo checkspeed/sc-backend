@@ -138,7 +138,7 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 			requestJson: `{
 				"download_speed":320000,
 				"total_downlad":490000,
-				"upload_speed":78000,|
+				"upload_speed":78000,
 				"total_upload":210000,
 				"latency":35,
 				"loaded_latency":52,
@@ -153,6 +153,70 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 				"latitude":6.52438,
 				"test_time":"2024-07-03T11:10:25.223Z"
 			}`,
+		},
+		{
+			name: "test 2",
+			requestJson: `{
+				"download_speed":19000,
+				"total_downlad":20000,
+				"upload_speed":7200,
+				"total_upload":30000,
+				"latency":46,
+				"loaded_latency":58,
+				"unloaded_latency":34,
+				"device_id":"undefined",
+				"isp":"Starlink Internet Services Nigeria Ltd",
+				"isp_code":"STARLINK",
+				"test_platform":"fast.com",
+				"connection_type":"4g",
+				"server_name":"Harare, ZW - Lagos, NG - nairobi, KE",
+				"state":"Lagos",
+				"country_code":"NG",
+				"country_name":"Nigeria",
+				"continent_code":"AF",
+				"continent_name":"Africa",
+				"longitude":3.38876,
+				"latitude":6.4547,
+				"test_time":"2024-07-08T21:46:42.279Z",
+				"device":{
+					"id":"undefined",
+					"identifier":"4bfae97e456bb2db53537f95f4bf117773f0578424edd34006ee3f0822225cd4",
+					"os":"Windows",
+					"screen_resolution":"3440x1440"
+					}
+				}`,
+		},
+		{
+			name: "test 2",
+			requestJson: `{
+				"download_speed":19000,
+				"total_downlad":20000,
+				"upload_speed":7200,
+				"total_upload":30000,
+				"latency":46,
+				"loaded_latency":58,
+				"unloaded_latency":34,
+				"device_id":"undefined",
+				"isp":"Starlink Internet Services Nigeria Ltd",
+				"isp_code":"STARLINK",
+				"test_platform":"fast.com",
+				"connection_type":"4g",
+				"server_name":"Harare, ZW - Lagos, NG - nairobi, KE",
+				"state":"Lagos",
+				"country_code":"NG",
+				"country_name":"Nigeria",
+				"continent_code":"AF",
+				"continent_name":"Africa",
+				"longitude":3.38876,
+				"latitude":6.4547,
+				"test_time":"2024-07-08T21:46:42.279Z",
+				"device":{
+					"id":"undefined",
+					"identifier":"4bfae97e456bb2db53537f95f4bf117773f0578424edd34006ee3f0822225cd4",
+					"os":"Windows",
+					"screen_resolution":"3440x1440"
+					}
+				}`,
 		},
 	}
 

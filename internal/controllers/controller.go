@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	"encoding/json"
 	"log"
@@ -108,10 +109,11 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		// userID = nil
 		// if requestBody.Device.UserID != "" {
 		// 	userID = &requestBody.Device.UserID
-		// } 
+		// }
+
 		device := models.Device{
-			ID:               uuid.NewString(),
-			Identifier:       requestBody.Device.Identifier,
+			ID:         uuid.NewString(),
+			Identifier: requestBody.Device.Identifier,
 			// UserID:           userID,
 			OS:               requestBody.Device.OS,
 			DeviceType:       requestBody.Device.DeviceType,
@@ -119,12 +121,28 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 			Model:            requestBody.Device.Model,
 			ScreenResolution: requestBody.Device.ScreenResolution,
 		}
-		deviceID, _, err := ct.devicesRepo.GetOrCreate(c.Request.Context(), device)
+
+		// Get device by identifier if it exists
+		deviceID, err := ct.devicesRepo.GetIDByIdentifier(c.Request.Context(), device.Identifier)
 		if err != nil {
-			log.Println("failed to get or create device: ", err.Error())
-			c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
-			return
+			if err != gorm.ErrRecordNotFound {
+				log.Println("failed to get or create device: ", err.Error())
+				c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+				return
+			}
 		}
+
+		// Create device if it doesn't exist
+		if deviceID == "" {
+			err := ct.devicesRepo.Create(c.Request.Context(), device)
+			if err != nil {
+				log.Println("failed to get or create device: ", err.Error())
+				c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+				return
+			}
+			deviceID = device.ID
+		}
+
 		requestBody.DeviceID = deviceID
 	}
 

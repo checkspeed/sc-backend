@@ -12,6 +12,9 @@ import (
 
 type Devices interface {
 	GetOrCreate(ctx context.Context, device models.Device) (string, int64, error)
+	GetIDByIdentifier(ctx context.Context, identifier string) (string, error)
+	Create(ctx context.Context, device models.Device) error
+	GetByID(ctx context.Context, id string) (*models.Device, error)
 }
 
 type devices struct {
@@ -49,4 +52,24 @@ func (d *devices) GetByID(ctx context.Context, id string) (*models.Device, error
 	}
 
 	return &device, nil
+}
+
+func (d *devices) GetIDByIdentifier(ctx context.Context, identifier string) (string, error) {
+	var device models.Device
+	resp := d.db.WithContext(ctx).
+		Where("identifier = ?", identifier).
+		Take(&device).Select("id")
+
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	return device.ID, nil
+}
+
+func (d *devices) Create(ctx context.Context, device models.Device) error {
+	return d.db.
+		WithContext(ctx).
+		Model(&models.Device{}).
+		Create(&device).Error
 }

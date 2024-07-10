@@ -133,6 +133,43 @@ func Test_GetOrCreate(t *testing.T) {
 	})
 }
 
+func Test_GetIDByIdentifier(t *testing.T) {
+	store, err := NewStore(databaseUrl)
+	require.NoError(t, err)
+
+	repo, err := NewDevicesRepo(store)
+	require.NoError(t, err)
+
+	t.Run("OK -Get by identifier", func(t *testing.T) {
+		ctx := context.Background()
+
+		// define a test device
+		testDevice := models.Device{
+			ID:         uuid.NewString(),
+			Identifier: "unique_device_identifier",
+			OS:         "Android",
+			DeviceType: "Mobile",
+		}
+
+		// perform GetOrCreate operation
+		err := repo.Create(ctx, testDevice)
+		assert.NoError(t, err)
+
+		// Perform GetOrCreate operation again to test the "get" case
+		id, err := repo.GetIDByIdentifier(ctx, testDevice.Identifier)
+		assert.NoError(t, err)
+		assert.Equal(t, testDevice.ID, id)
+
+		// Perform GetByID to validate the created fields
+		dbDevice, err := repo.GetByID(ctx, id)
+		assert.NoError(t, err)
+		assert.Equal(t, testDevice.Identifier, dbDevice.Identifier)
+		assert.Equal(t, testDevice.OS, dbDevice.OS)
+		assert.Equal(t, testDevice.DeviceType, dbDevice.DeviceType)
+
+	})
+}
+
 func Test_RunManualUpMigration(t *testing.T) {
 	ctx := context.Background()
 	err := godotenv.Load("../../.env")
