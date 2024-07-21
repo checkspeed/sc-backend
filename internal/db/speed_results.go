@@ -18,8 +18,8 @@ type GetSpeedTestResultsFilter struct {
 }
 
 type SpeedTestResults interface {
-	Create(ctx context.Context, speedTestResult *models.SpeedTestResult) error
-	Get(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResult, error)
+	Create(ctx context.Context, speedTestResult *models.SpeedTestResults) error
+	Get(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResults, error)
 }
 
 type speedTestResultsRepo struct {
@@ -32,7 +32,7 @@ func NewSpeedTestResultsRepo(store Store) (speedTestResultsRepo, error) {
 	return speedTestResultsRepo{db}, nil
 }
 
-func (s speedTestResultsRepo) Create(ctx context.Context, speedTestResult *models.SpeedTestResult) error {
+func (s speedTestResultsRepo) Create(ctx context.Context, speedTestResult *models.SpeedTestResults) error {
 	result := s.db.WithContext(ctx).Create(&speedTestResult)
 
 	if result.Error != nil {
@@ -41,8 +41,8 @@ func (s speedTestResultsRepo) Create(ctx context.Context, speedTestResult *model
 	return nil
 }
 
-func (s speedTestResultsRepo)  Get(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResult, error) {
-	var speedTestResult []models.SpeedTestResult
+func (s speedTestResultsRepo)  Get(ctx context.Context, filters GetSpeedTestResultsFilter) ([]models.SpeedTestResults, error) {
+	var speedTestResult []models.SpeedTestResults
 
 	query := s.db.WithContext(ctx)
 

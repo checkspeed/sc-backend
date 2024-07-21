@@ -1,13 +1,16 @@
 package controllers
 
 import (
+	"crypto/sha1"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -111,9 +114,10 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		// 	userID = &requestBody.Device.UserID
 		// }
 
+		deviceIdentifier := Hash([]string{requestBody.Device.OS, requestBody.Device.ScreenResolution, requestBody.Device.DeviceIP})
 		device := models.Device{
 			ID:         uuid.NewString(),
-			Identifier: requestBody.Device.Identifier,
+			Identifier: deviceIdentifier,
 			// UserID:           userID,
 			OS:               requestBody.Device.OS,
 			DeviceType:       requestBody.Device.DeviceType,
@@ -146,6 +150,8 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		requestBody.DeviceID = deviceID
 	}
 
+	// TODO: Validate provided device id
+
 	// get server id
 	// ts := models.TestServer{
 	// 	ID:         uuid.NewString(),
@@ -174,7 +180,7 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		return
 	}
 
-	apiResp := models.CreateSpeedTestResultResposne{
+	apiResp := models.CreateSpeedTestResultResponse{
 		Message:  "success",
 		DeviceID: speedTestResult.DeviceID,
 	}
@@ -204,12 +210,12 @@ func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
 	c.JSON(http.StatusOK, apiResp)
 }
 
-func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedTestResult, error) {
+func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedTestResults, error) {
 	// testTime, err := time.Parse(time.RFC1123, input.TestTime)
 	// if err != nil {
 	// 	return models.SpeedTestResult{}, err
 	// }
-	return models.SpeedTestResult{
+	return models.SpeedTestResults{
 		ID:               uuid.NewString(),
 		DownloadSpeed:    input.DownloadSpeed,
 		MaxDownloadSpeed: input.MaxDownloadSpeed,
@@ -245,4 +251,12 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}, nil
+}
+
+// Hash returns a hash formed from a concat slice of string input
+func Hash(input []string) string {
+	s := strings.Join(input, "")
+	h := sha1.New()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil))
 }

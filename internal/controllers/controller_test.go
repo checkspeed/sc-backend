@@ -212,7 +212,7 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 				"test_time":"2024-07-08T21:46:42.279Z",
 				"device":{
 					"id":"undefined",
-					"identifier":"4bfae97e456bb2db53537f95f4bf117773f0578424edd34006ee3f0822225cd4",
+					"device_ip":"some-ip-addr",
 					"os":"Windows",
 					"screen_resolution":"3440x1440"
 					}
@@ -235,7 +235,7 @@ func Test_CreateSpeedtestResults(t *testing.T) {
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
-			var response models.CreateSpeedTestResultResposne
+			var response models.CreateSpeedTestResultResponse
 			err = json.Unmarshal(w.Body.Bytes(), &response)
 			fmt.Println("response: ", response)
 			require.NoError(t, err)

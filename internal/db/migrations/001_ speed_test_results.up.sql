@@ -30,12 +30,15 @@ CREATE TABLE
        id UUID NOT NULL PRIMARY KEY,
 
         user_id UUID DEFAULT NULL,
+        device_id UUID DEFAULT NULL REFERENCES devices(id),
+
         identifier VARCHAR(100) UNIQUE NOT NULL,
         os VARCHAR(50),
         device_type VARCHAR(50),
         manufacturer VARCHAR(50),
         model VARCHAR(50),
         screen_resolution VARCHAR(50),
+        is_platform_device BOOLEAN DEFAULT TRUE,
 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
