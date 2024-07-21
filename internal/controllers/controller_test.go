@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	// "os"
 	"testing"
 	"time"
 
@@ -22,14 +21,11 @@ import (
 	"github.com/checkspeed/sc-backend/internal/models"
 	"github.com/gin-gonic/gin"
 
-	// "github.com/google/uuid"
-	// "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	// "github.com/stretchr/testify/require"
 )
 
 var store db.Store

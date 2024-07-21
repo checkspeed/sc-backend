@@ -106,24 +106,18 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		return
 	}
 
-	// get device id if not provided
+	// Get or create device if deviceID is not provided in request body
 	if requestBody.DeviceID == "" || requestBody.DeviceID == "undefined" {
-		// var userID *string
-		// userID = nil
-		// if requestBody.Device.UserID != "" {
-		// 	userID = &requestBody.Device.UserID
-		// }
-
 		deviceIdentifier := Hash([]string{requestBody.Device.OS, requestBody.Device.ScreenResolution, requestBody.Device.DeviceIP})
 		device := models.Device{
 			ID:         uuid.NewString(),
 			Identifier: deviceIdentifier,
-			// UserID:           userID,
 			OS:               requestBody.Device.OS,
-			DeviceType:       requestBody.Device.DeviceType,
+			DeviceType:       "Desktop",
 			Manufacturer:     requestBody.Device.Manufacturer,
 			Model:            requestBody.Device.Model,
 			ScreenResolution: requestBody.Device.ScreenResolution,
+			IsPlatformDevice: true,
 		}
 
 		// Get device by identifier if it exists
@@ -151,22 +145,6 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 	}
 
 	// TODO: Validate provided device id
-
-	// get server id
-	// ts := models.TestServer{
-	// 	ID:         uuid.NewString(),
-	// 	Identifier: requestBody.TestServer.Identifier,
-	// 	Name:       requestBody.TestServer.Name,
-	// 	City:       requestBody.TestServer.City,
-	// 	Country:    requestBody.TestServer.Country,
-	// }
-	// serverID, _, err := ct.testSrvRepo.GetOrCreate(c.Request.Context(), ts)
-	// if err != nil {
-	// 	log.Println("failed to get or test server: ", err.Error())
-	// 	c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
-	// 	return
-	// }
-	// requestBody.TestServer.ID = serverID
 
 	speedTestResult, err := transformSpeedTestResult(requestBody)
 	if err != nil {
@@ -236,7 +214,6 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		ConnectionType:   input.ConnectionType,
 		ConnectionDevice: input.ConnectionDevice,
 		TestPlatform:     input.TestPlatform,
-		// ServerID:         input.TestServer.ID,
 		ServerName:     input.ServerName,
 		State:          input.State,
 		CountryCode:    input.CountryCode,
