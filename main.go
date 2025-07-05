@@ -24,6 +24,17 @@ func main() {
 		log.Fatalf("unable to initialize database, %v \n", err.Error())
 	}
 
+	migrator, err := db.NewMigrator(store)
+	if err != nil {
+		log.Fatalf("failed to initialize migrator: %v", err)
+	}
+
+	ctx := context.Background()
+	if err := migrator.Up(ctx); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
+	log.Println("✅ Database migrated successfully")
 
 	ctrl, err := controllers.NewController(cfg, store)
 	if err != nil {
@@ -45,12 +56,18 @@ func main() {
 
 func RunServer(ctrl *controllers.Controller, cfg config.Config) {
 	r := gin.Default()
-	
+
 	// add cors config
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowCredentials = true
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AddAllowMethods("OPTIONS")
+	// corsConfig := cors.DefaultConfig()
+	// corsConfig.AllowCredentials = true
+	// corsConfig.AllowAllOrigins = true
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		AllowCredentials: false,
+	}
+	// corsConfig.AddAllowMethods("OPTIONS")
 	r.Use(cors.New(corsConfig))
 
 	r.GET("/", welcome)
