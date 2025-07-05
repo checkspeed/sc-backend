@@ -24,7 +24,6 @@ func main() {
 		log.Fatalf("unable to initialize database, %v \n", err.Error())
 	}
 
-
 	ctrl, err := controllers.NewController(cfg, store)
 	if err != nil {
 		log.Fatalf("unable to initialize controller, %v \n", err.Error())
@@ -45,12 +44,18 @@ func main() {
 
 func RunServer(ctrl *controllers.Controller, cfg config.Config) {
 	r := gin.Default()
-	
+
 	// add cors config
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowCredentials = true
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AddAllowMethods("OPTIONS")
+	// corsConfig := cors.DefaultConfig()
+	// corsConfig.AllowCredentials = true
+	// corsConfig.AllowAllOrigins = true
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		AllowCredentials: false,
+	}
+	// corsConfig.AddAllowMethods("OPTIONS")
 	r.Use(cors.New(corsConfig))
 
 	r.GET("/", welcome)
