@@ -24,18 +24,6 @@ func main() {
 		log.Fatalf("unable to initialize database, %v \n", err.Error())
 	}
 
-	migrator, err := db.NewMigrator(store)
-	if err != nil {
-		log.Fatalf("failed to initialize migrator: %v", err)
-	}
-
-	ctx := context.Background()
-	if err := migrator.Up(ctx); err != nil {
-		log.Fatalf("migration failed: %v", err)
-	}
-
-	log.Println("✅ Database migrated successfully")
-
 	ctrl, err := controllers.NewController(cfg, store)
 	if err != nil {
 		log.Fatalf("unable to initialize controller, %v \n", err.Error())
