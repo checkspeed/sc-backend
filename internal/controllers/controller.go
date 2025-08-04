@@ -3,12 +3,15 @@ package controllers
 import (
 	"crypto/sha1"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/jomei/notionapi"
 
 	"encoding/hex"
 	"encoding/json"
@@ -18,6 +21,7 @@ import (
 	"github.com/checkspeed/sc-backend/internal/config"
 	"github.com/checkspeed/sc-backend/internal/db"
 	"github.com/checkspeed/sc-backend/internal/models"
+	"github.com/checkspeed/sc-backend/internal/utils"
 )
 
 type Controller struct {
@@ -48,6 +52,115 @@ func NewController(cfg config.Config, store db.Store) (*Controller, error) {
 		speedTRepo:  speedTRepo,
 		testSrvRepo: testSrvRepo,
 	}, nil
+}
+
+func (ct *Controller) CreateFeedback(c *gin.Context) {
+	var requestBody models.CreateFeedback
+
+	// 1. Parse JSON body
+	if err := c.BindJSON(&requestBody); err != nil {
+		log.Println("invalid request body error:", err.Error())
+		c.JSON(http.StatusBadRequest, models.ApiResp{Error: "Invalid request body"})
+		return
+	}
+
+	// 2. Validation (using utils)
+	if !utils.IsValidText(requestBody.Message, true) {
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Error: "Message must contain letters/numbers and not be only special characters",
+		})
+		return
+	}
+	// Validate Subject (optional but must be valid if provided)
+	if requestBody.Subject != "" && !utils.IsValidText(requestBody.Subject, false) {
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Error: "Subject must contain valid characters",
+		})
+		return
+	}
+
+	//  Validate Email (optional but strict if provided)
+	if requestBody.Email != "" && !utils.IsValidEmail(requestBody.Email) {
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Error: "Invalid email format (example: user@example.com)",
+		})
+		return
+	}
+
+	// 3. Prepare Notion payload : Initialize Notion client
+	client := notionapi.NewClient(notionapi.Token(os.Getenv("NOTION_API_KEY")))
+	databaseID := notionapi.DatabaseID(os.Getenv("NOTION_DATABASE_ID"))
+
+	// Create short preview (first 100 chars)
+	messagePreview := requestBody.Message
+	if len(messagePreview) > 100 {
+		messagePreview = messagePreview[:100] + "..."
+	}
+
+	// Map feedback to Notion properties
+	properties := notionapi.Properties{
+		"Message": notionapi.RichTextProperty{
+			RichText: []notionapi.RichText{
+				{Text: &notionapi.Text{Content: messagePreview}},
+			},
+		},
+	}
+
+	// Optional field: Add Subject only if provided
+	if requestBody.Subject != "" {
+		properties["Subject"] = notionapi.TitleProperty{
+			Title: []notionapi.RichText{
+				{Text: &notionapi.Text{Content: requestBody.Subject}},
+			},
+		}
+	}
+
+	// Optional field: Add Email only if provided
+	if requestBody.Email != "" {
+		properties["Email"] = notionapi.EmailProperty{
+			Email: requestBody.Email,
+		}
+	}
+
+	dateCreated := notionapi.Date(time.Now().UTC())
+	properties["Date created"] = notionapi.DateProperty{
+		Date: &notionapi.DateObject{
+			Start: &dateCreated,
+		},
+	}
+
+	// 4. Save to Notion
+	_, err := client.Page.Create(c.Request.Context(), &notionapi.PageCreateRequest{
+		Parent:     notionapi.Parent{DatabaseID: databaseID},
+		Properties: properties,
+		//this will add the message to the page view
+		Children: []notionapi.Block{
+			&notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{Object: "block", Type: notionapi.BlockTypeParagraph},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
+						{Text: &notionapi.Text{Content: requestBody.Message}},
+					},
+				},
+			},
+		},
+	})
+
+	apiRespSuccess := models.ApiResp{
+		Message: "success: Feedback submitted",
+	}
+	apiRespFailure := models.ApiResp{
+		Error: "Failed to save feedback to Notion",
+	}
+
+	if err != nil {
+		log.Println("error creating feedback data", err)
+		c.JSON(http.StatusInternalServerError, apiRespFailure)
+		return
+	}
+
+	c.JSON(http.StatusCreated, apiRespSuccess)
+
 }
 
 func (ct *Controller) GetNetworkInfo(c *gin.Context) {
@@ -110,8 +223,8 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 	if requestBody.DeviceID == "" || requestBody.DeviceID == "undefined" {
 		deviceIdentifier := Hash([]string{requestBody.Device.OS, requestBody.Device.ScreenResolution, requestBody.Device.DeviceIP})
 		device := models.Device{
-			ID:         uuid.NewString(),
-			Identifier: deviceIdentifier,
+			ID:               uuid.NewString(),
+			Identifier:       deviceIdentifier,
 			OS:               requestBody.Device.OS,
 			DeviceType:       "Desktop",
 			Manufacturer:     requestBody.Device.Manufacturer,
@@ -214,15 +327,15 @@ func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedT
 		ConnectionType:   input.ConnectionType,
 		ConnectionDevice: input.ConnectionDevice,
 		TestPlatform:     input.TestPlatform,
-		ServerName:     input.ServerName,
-		State:          input.State,
-		CountryCode:    input.CountryCode,
-		CountryName:    input.CountryName,
-		ContinentCode:  input.ContinentCode,
-		ContinentName:  input.ContinentName,
-		Longitude:      input.Longitude,
-		Latitude:       input.Latitude,
-		LocationAccess: input.LocationAccess,
+		ServerName:       input.ServerName,
+		State:            input.State,
+		CountryCode:      input.CountryCode,
+		CountryName:      input.CountryName,
+		ContinentCode:    input.ContinentCode,
+		ContinentName:    input.ContinentName,
+		Longitude:        input.Longitude,
+		Latitude:         input.Latitude,
+		LocationAccess:   input.LocationAccess,
 		// TestTime:         testTime,
 		TestTime:  time.Now(),
 		CreatedAt: time.Now(),
