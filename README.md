@@ -4,6 +4,9 @@
 
 ### Overview
 
+### start the app
+go run main.go
+
 ### Repository
 The repositories package encapsulates the logic required to interact with the database, allowing other parts of the application to perform CRUD operations without directly dealing with SQL queries or database connections.
 
