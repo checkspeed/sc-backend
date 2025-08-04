@@ -170,6 +170,11 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 	resp, err := http.Get(geoUrl)
 	if err != nil {
 		log.Println("error calling ip-api endpoint", err)
+		apiKey := os.Getenv("NOTION_API_KEY")
+		// dbID := os.Getenv("NOTION_DATABASE_ID")
+
+		log.Println("NOTION_API_KEY (first 6 chars)", apiKey[:6])
+		// log.Printf("NOTION_DATABASE_ID (first 6 chars): %s****", dbID[:6])
 		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
 	}
 
