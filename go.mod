@@ -1,8 +1,8 @@
 module github.com/checkspeed/sc-backend
 
-go 1.21
+go 1.24.0
 
-toolchain go1.21.0
+toolchain go1.24.7
 
 require (
 	github.com/gin-contrib/cors v1.7.2
@@ -16,6 +16,8 @@ require (
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )
+
+require golang.org/x/time v0.13.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
