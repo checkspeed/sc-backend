@@ -224,7 +224,7 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 	}
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
 	defer cancel()
 
 	geoUrl := fmt.Sprintf("https://api.ipgeolocation.io/ipgeo?apiKey=%s&ip=%s", ct.cfg.GeoAPIKey, ipAddr)
@@ -344,7 +344,7 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		}
 
 		// Get device by identifier if it exists
-		deviceID, err := ct.devicesRepo.GetIDByIdentifier(c.Request.Context(), device.Identifier)
+		deviceID, err := ct.devicesRepo.GetIDByIdentifier(ctx, device.Identifier)
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
 				log.Println("CreateSpeedTestResult - failed to get or create device: ", err.Error())
