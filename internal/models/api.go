@@ -1,9 +1,20 @@
 package models
 
+type ApiStatus string
+
+const (
+	StatusSuccess ApiStatus = "success"
+	StatusFail    ApiStatus = "fail"
+	StatusError   ApiStatus = "error"
+)
+
 type ApiResp struct {
-	Error   string `json:"error,omitempty"`
-	Message string `json:"message,omitempty"`
-	Data    any    `json:"data,omitempty"`
+	Status  ApiStatus `json:"status"`            // "success", "fail", or "error"
+	Message string    `json:"message,omitempty"` // Human-readable message
+	Data    any       `json:"data,omitempty"`    // Response payload
+	Code    string    `json:"code,omitempty"`    // Machine-readable code
+	Error   string    `json:"error,omitempty"`   // Human-readable message
+
 }
 
 type NetworkData struct {
