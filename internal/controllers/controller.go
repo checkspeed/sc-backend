@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"os"
@@ -57,24 +58,52 @@ func NewController(cfg config.Config, store db.Store) (*Controller, error) {
 func (ct *Controller) CreateFeedback(c *gin.Context) {
 	var requestBody models.CreateFeedback
 
+	// Track when request started (used later for logging duration & timestamp)
+	startTime := time.Now()
+
 	// 1. Parse JSON body
 	if err := c.BindJSON(&requestBody); err != nil {
-		log.Println("invalid request body error:", err.Error())
-		c.JSON(http.StatusBadRequest, models.ApiResp{Error: "Invalid request body"})
+		log.Printf("[%s] CreateFeedback - invalid request body: %s", startTime.Format(time.RFC3339), err.Error())
+		c.JSON(http.StatusBadRequest, models.ApiResp{Status: models.StatusFail, Message: "Invalid request body",
+			Code: "INVALID_BODY"})
 		return
 	}
 
 	// 2. Validation (using utils)
+	requestBody.Message = strings.TrimSpace(requestBody.Message)
+	requestBody.Subject = strings.TrimSpace(requestBody.Subject)
+	requestBody.Email = strings.TrimSpace(requestBody.Email)
+
 	if !utils.IsValidText(requestBody.Message, true) {
 		c.JSON(http.StatusBadRequest, models.ApiResp{
-			Error: "Message must contain letters/numbers and not be only special characters",
+			Status:  models.StatusFail,
+			Message: "Message must contain letters/numbers and not only special characters",
+			Code:    "INVALID_MESSAGE"})
+		return
+	}
+	if len(requestBody.Message) > 5000 {
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Status:  models.StatusFail,
+			Message: "Message too long (max 5000 characters)",
+			Code:    "MESSAGE_TOO_LONG",
 		})
 		return
 	}
+
 	// Validate Subject (optional but must be valid if provided)
 	if requestBody.Subject != "" && !utils.IsValidText(requestBody.Subject, false) {
 		c.JSON(http.StatusBadRequest, models.ApiResp{
-			Error: "Subject must contain valid characters",
+			Status:  models.StatusFail,
+			Message: "Subject must contain valid characters",
+			Code:    "INVALID_SUBJECT"})
+		return
+	}
+
+	if len(requestBody.Subject) > 200 {
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Status:  models.StatusFail,
+			Message: "Subject too long (max 200 characters)",
+			Code:    "SUBJECT_TOO_LONG",
 		})
 		return
 	}
@@ -82,8 +111,9 @@ func (ct *Controller) CreateFeedback(c *gin.Context) {
 	//  Validate Email (optional but strict if provided)
 	if requestBody.Email != "" && !utils.IsValidEmail(requestBody.Email) {
 		c.JSON(http.StatusBadRequest, models.ApiResp{
-			Error: "Invalid email format (example: user@example.com)",
-		})
+			Status:  models.StatusFail,
+			Message: "Invalid email format (example: user@example.com)",
+			Code:    "INVALID_EMAIL"})
 		return
 	}
 
@@ -128,9 +158,11 @@ func (ct *Controller) CreateFeedback(c *gin.Context) {
 			Start: &dateCreated,
 		},
 	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
 
 	// 4. Save to Notion
-	_, err := client.Page.Create(c.Request.Context(), &notionapi.PageCreateRequest{
+	_, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
 		Parent:     notionapi.Parent{DatabaseID: databaseID},
 		Properties: properties,
 		//this will add the message to the page view
@@ -146,31 +178,79 @@ func (ct *Controller) CreateFeedback(c *gin.Context) {
 		},
 	})
 
-	apiRespSuccess := models.ApiResp{
-		Message: "success: Feedback submitted",
-	}
-	apiRespFailure := models.ApiResp{
-		Error: "Failed to save feedback to Notion",
-	}
-
 	if err != nil {
-		log.Println("error creating feedback data", err)
-		c.JSON(http.StatusInternalServerError, apiRespFailure)
+		// Here we use %v, which also calls err.Error() under the hood
+		// (just showing both styles so you get familiar with them)
+		log.Printf("[%s] CreateFeedback - Notion error: %v",
+			startTime.Format(time.RFC3339), err)
+
+		c.JSON(http.StatusInternalServerError, models.ApiResp{
+			Status:  models.StatusError,
+			Message: "Failed to save feedback",
+			Code:    "NOTION_ERROR",
+		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, apiRespSuccess)
+	// 5. Log success (duration = how long the whole request took)
+	log.Printf("[%s] CreateFeedback - success duration=%v",
+		startTime.Format(time.RFC3339),
+		time.Since(startTime),
+	)
+
+	c.JSON(http.StatusCreated, models.ApiResp{
+		Status:  models.StatusSuccess,
+		Message: "Feedback submitted successfully",
+		Code:    "SUCCESS",
+	})
 
 }
 
 func (ct *Controller) GetNetworkInfo(c *gin.Context) {
+
+	startTime := time.Now()
+
 	ipAddr := c.Request.URL.Query().Get("ip")
 
+	if ipAddr == "" {
+		log.Printf("GetNetworkInfo - missing IP parameter from client: %s", c.ClientIP())
+
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Status:  models.StatusFail,
+			Message: "IP parameter is required",
+			Code:    "MISSING_IP",
+		})
+		return
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
 	geoUrl := fmt.Sprintf("https://api.ipgeolocation.io/ipgeo?apiKey=%s&ip=%s", ct.cfg.GeoAPIKey, ipAddr)
-	resp, err := http.Get(geoUrl)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, geoUrl, nil)
+
 	if err != nil {
-		log.Println("error calling ip-api endpoint", err)
-		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
+		log.Printf("GetNetworkInfo - failed to create request for IP %s: %v", ipAddr, err)
+		c.JSON(http.StatusInternalServerError, models.ApiResp{
+			Status:  models.StatusError,
+			Message: "Internal server error",
+			Code:    "INTERNAL_ERROR",
+		})
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("GetNetworkInfo - API call failed for IP %s: %v", ipAddr, err)
+		c.JSON(http.StatusBadGateway, models.ApiResp{
+			Status:  models.StatusError,
+			Message: "Geolocation service unavailable",
+			Code:    "SERVICE_ERROR",
+		})
+		return
 	}
 
 	defer resp.Body.Close()
@@ -178,23 +258,44 @@ func (ct *Controller) GetNetworkInfo(c *gin.Context) {
 	var respBody models.NetworkData
 	json.NewDecoder(resp.Body).Decode(&respBody)
 
-	apiResp := models.ApiResp{
-		Message: "success",
+	// Log success with duration
+	duration := time.Since(startTime)
+	log.Printf("GetNetworkInfo - success for IP %s (took %v)", ipAddr, duration)
+	c.JSON(http.StatusOK, models.ApiResp{
+		Status:  models.StatusSuccess,
+		Message: "Success",
 		Data:    respBody,
-	}
-
-	// send response to user
-	c.JSON(http.StatusOK, apiResp)
+	})
 }
 
 func (ct *Controller) GetGeoLocationInfo(c *gin.Context) {
+	startTime := time.Now()
+
 	ipAddr := c.Request.URL.Query().Get("ip")
+
+	if ipAddr == "" {
+		log.Printf("GetGeoLocationInfo - missing IP parameter from client: %s", c.ClientIP())
+
+		c.JSON(http.StatusBadRequest, models.ApiResp{
+			Status:  models.StatusFail,
+			Message: "IP parameter is required",
+			Code:    "MISSING_IP",
+		})
+		return
+	}
 
 	geoUrl := fmt.Sprintf("https://get.geojs.io/v1/ip/geo.json?ip=%s", ipAddr)
 	resp, err := http.Get(geoUrl)
+
 	if err != nil {
-		log.Println("error calling ip-geo endpoint", err)
-		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
+		log.Printf("GetGeoLocationInfo - API call failed: %v", err)
+
+		c.JSON(http.StatusBadGateway, models.ApiResp{
+			Status:  models.StatusError,
+			Message: "GetGeoLocationInfo service unavailable",
+			Code:    "SERVICE_ERROR",
+		})
+		return
 	}
 
 	defer resp.Body.Close()
@@ -202,20 +303,29 @@ func (ct *Controller) GetGeoLocationInfo(c *gin.Context) {
 	var respBody models.GeoLocationData
 	json.NewDecoder(resp.Body).Decode(&respBody)
 
-	apiResp := models.ApiResp{
-		Message: "success",
-		Data:    respBody,
-	}
-
 	// send response to user
-	c.JSON(http.StatusOK, apiResp)
+	duration := time.Since(startTime)
+
+	log.Printf("GetGeoLocationInfo - success for IP %s (took %v)", ipAddr, duration)
+	c.JSON(http.StatusOK, models.ApiResp{
+		Status:  models.StatusSuccess,
+		Message: "Success",
+		Data:    respBody,
+	})
 }
 
 func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
+
 	var requestBody models.CreateSpeedTestResult
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
 	if err := c.BindJSON(&requestBody); err != nil {
-		log.Println("invalid request body error: ", err.Error())
-		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
+		log.Println("CreateSpeedTestResult - invalid request body: ", err.Error())
+		c.JSON(http.StatusBadRequest, models.ApiResp{Status: models.StatusFail, Message: "Invalid request body",
+			Code: "INVALID_BODY"})
 		return
 	}
 
@@ -237,18 +347,24 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 		deviceID, err := ct.devicesRepo.GetIDByIdentifier(c.Request.Context(), device.Identifier)
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
-				log.Println("failed to get or create device: ", err.Error())
-				c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+				log.Println("CreateSpeedTestResult - failed to get or create device: ", err.Error())
+				c.JSON(http.StatusInternalServerError, models.ApiResp{
+					Status:  models.StatusError,
+					Message: "failed to get or create device",
+					Code:    "INTERNAL_ERROR"})
 				return
 			}
 		}
 
 		// Create device if it doesn't exist
 		if deviceID == "" {
-			err := ct.devicesRepo.Create(c.Request.Context(), device)
+			err := ct.devicesRepo.Create(ctx, device)
 			if err != nil {
-				log.Println("failed to get or create device: ", err.Error())
-				c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+				log.Println("CreateSpeedTestResult - failed to get or create device: ", err.Error())
+				c.JSON(http.StatusInternalServerError, models.ApiResp{
+					Status:  models.StatusError,
+					Message: "failed to get or create device",
+					Code:    "INTERNAL_ERROR"})
 				return
 			}
 			deviceID = device.ID
@@ -262,12 +378,12 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 	speedTestResult, err := transformSpeedTestResult(requestBody)
 	if err != nil {
 		log.Println("failed to transform input: ", err.Error())
-		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Message: err.Error()})
 		return
 	}
-	if err := ct.speedTRepo.Create(c.Request.Context(), &speedTestResult); err != nil {
+	if err := ct.speedTRepo.Create(ctx, &speedTestResult); err != nil {
 		log.Println("failed to store speed test results: ", err.Error())
-		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Message: err.Error()})
 		return
 	}
 
@@ -280,25 +396,42 @@ func (ct *Controller) CreateSpeedtestResults(c *gin.Context) {
 }
 
 func (ct *Controller) GetSpeedtestResults(c *gin.Context) {
+	startTime := time.Now()
+
 	var filters db.GetSpeedTestResultsFilter
 
 	if err := c.BindJSON(&filters); err != nil {
-		log.Println("invalid request body error: ", err.Error())
-		c.JSON(http.StatusBadRequest, models.ApiResp{Error: err.Error()})
+		log.Printf("GetSpeedTestResultsFilter - invalid request body: %s", err.Error())
+
+		c.JSON(http.StatusBadRequest, models.ApiResp{Status: models.StatusFail, Message: "Invalid request body",
+			Code: "INVALID_BODY"})
 		return
 	}
-	results, err := ct.speedTRepo.Get(c.Request.Context(), filters)
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
+	results, err := ct.speedTRepo.Get(ctx, filters)
 	if err != nil {
-		log.Println("failed to retrieve speed test results: ", err.Error())
-		c.JSON(http.StatusInternalServerError, models.ApiResp{Error: err.Error()})
+		log.Printf("GetSpeedTestResults: failed to retrieve speed test results: %s", err.Error())
+
+		c.JSON(http.StatusInternalServerError, models.ApiResp{Status: models.StatusError, Message: "Internal server error",
+			Code: "INTERNAL_ERROR"})
+		return
 	}
 
-	apiResp := models.ApiResp{
-		Message: "success",
-		Data:    results,
-	}
+	// send response to user
+	duration := time.Since(startTime)
 
-	c.JSON(http.StatusOK, apiResp)
+	log.Printf("[%s] GetSpeedTestResults - retrieved success duration=%v",
+		startTime.Format(time.RFC3339),
+		duration,
+	)
+
+	c.JSON(http.StatusOK, models.ApiResp{
+		Status: models.StatusSuccess,
+		Data:   results,
+	})
 }
 
 func transformSpeedTestResult(input models.CreateSpeedTestResult) (models.SpeedTestResults, error) {
