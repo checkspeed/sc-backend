@@ -17,7 +17,7 @@ require (
 	gorm.io/gorm v1.25.10
 )
 
-require golang.org/x/time v0.13.0 // indirect
+require golang.org/x/time v0.13.0
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

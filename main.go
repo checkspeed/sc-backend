@@ -70,11 +70,10 @@ func RunServer(ctrl *controllers.Controller, cfg config.Config, clientLimiter *m
 	r.GET("/", welcome)
 	r.GET("/network", ctrl.GetNetworkInfo)
 	r.GET("/geolocation", ctrl.GetNetworkInfo)
+	r.POST("/speed_test_result", middleware.RateLimit(clientLimiter), ctrl.CreateSpeedtestResults)
 	r.POST("/speed_test_result/list", ctrl.GetSpeedtestResults)
 	r.POST("/feedback", ctrl.CreateFeedback)
 	r.Run(":" + cfg.Port)
-
-	r.POST("/speed_test_result", middleware.RateLimit(clientLimiter), ctrl.CreateSpeedtestResults)
 
 }
 
